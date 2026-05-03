@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" style="color-scheme: light;">
 <head>
@@ -772,13 +773,38 @@ input:-webkit-autofill:focus {
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 5.5v.2" stroke-linecap="round"/></svg>
         Credentials stored in browser localStorage only. Never sent anywhere except directly to Google and Anthropic APIs.
       </div>
-      <div style="margin-top:1.25rem;"><button class="btn btn-primary btn-full" style="font-size:16px;height:54px;" onclick="launch()">Get started →</button></div>
+      <div style="margin-top:1.25rem;"><button class="btn btn-primary btn-full" style="font-size:16px;height:54px;cursor:pointer;" 
+  onclick="(function(){
+    try {
+      var cid=document.getElementById('s-cid').value.trim();
+      var csec=document.getElementById('s-csec').value.trim();
+      var rtok=document.getElementById('s-rtok').value.trim();
+      var akey=document.getElementById('s-akey').value.trim();
+      var priority=document.getElementById('s-priority').value.trim();
+      var errEl=document.getElementById('setup-err');
+      if(!cid||!csec||!rtok||!akey){
+        errEl.innerHTML='<div style=\'padding:12px 16px;border-radius:14px;background:rgba(214,48,49,0.08);border:1.5px solid rgba(214,48,49,0.2);color:#d63031;font-size:15px;margin-top:8px;font-weight:500;\'>Please fill in all four credential fields.</div>';
+        return;
+      }
+      window._iz_cfg={cid:cid,csec:csec,rtok:rtok,akey:akey,priority:priority||'@csdecatur.net'};
+      if(typeof cfg!=='undefined') { cfg=window._iz_cfg; }
+      try{localStorage.setItem('iz2_cfg',JSON.stringify(window._iz_cfg));}catch(e){}
+      var sv=document.getElementById('setup-view');
+      var mv=document.getElementById('main-view');
+      if(sv) sv.style.display='none';
+      if(mv){ mv.style.display='block'; mv.style.visibility='visible'; }
+      if(typeof renderNav==='function') renderNav();
+    } catch(e) {
+      var errEl2=document.getElementById('setup-err');
+      if(errEl2) errEl2.innerHTML='<div style=\'padding:12px;background:rgba(214,48,49,0.08);border:1.5px solid rgba(214,48,49,0.2);color:#d63031;border-radius:14px;margin-top:8px;\'>Error: '+e.message+'</div>';
+    }
+  })()">Get started →</button></div>
       <div id="setup-err"></div>
     </div>
   </div>
 
   <!-- Main -->
-  <div id="main-view" style="display:none;visibility:hidden;">
+  <div id="main-view" style="display:none;">
     <div class="main-hdr">
       <div class="greeting-bar">
         <div class="greeting-title" id="greeting-title">Good morning 👋</div>
@@ -850,7 +876,7 @@ input:-webkit-autofill:focus {
 
 <script>
 // ── Core utils first — must be available before anything else ──
-function show(id){var el=document.getElementById(id);if(el){el.style.display='block';el.style.visibility='';el.removeAttribute('hidden');}}
+function show(id){var el=document.getElementById(id);if(el){el.style.display='block';}}
 function hide(id){var el=document.getElementById(id);if(el){el.style.display='none';}}
 function gv(id){var el=document.getElementById(id);return el?el.value.trim():'';}
 function sv(id,val){var el=document.getElementById(id);if(el)el.value=val;}
@@ -858,12 +884,16 @@ function sv(id,val){var el=document.getElementById(id);if(el)el.value=val;}
 let cfg={}, emails=[], results={flagged:[],archive:[],all:[]}, expanded=new Set(), composers={}, selected=new Set(), actioned=0, activeTab='flagged', token=null, chatOpen=false, chatHistory=[], chatBusy=false;
 
 document.addEventListener('DOMContentLoaded', function(){
-  loadSaved(); loadTodos(); renderNav(); upTodoBadge();
-  // Set greeting based on time of day
-  var h = new Date().getHours();
-  var greet = h < 12 ? 'Good morning 👋' : h < 17 ? 'Good afternoon 👋' : 'Good evening 👋';
-  var el = document.getElementById('greeting-title');
-  if (el) el.textContent = greet;
+  try {
+    loadSaved(); loadTodos(); renderNav(); upTodoBadge();
+    var h = new Date().getHours();
+    var greet = h < 12 ? 'Good morning 👋' : h < 17 ? 'Good afternoon 👋' : 'Good evening 👋';
+    var el = document.getElementById('greeting-title');
+    if (el) el.textContent = greet;
+  } catch(e) {
+    var err = document.getElementById('setup-err');
+    if (err) err.innerHTML = '<div class="err-banner">Init error: ' + e.message + '</div>';
+  }
 });
 
 function renderNav() {
@@ -873,6 +903,7 @@ function renderNav() {
 
 function launch() {
   try {
+    if(window._iz_cfg && window._iz_cfg.cid) { cfg=window._iz_cfg; hide('setup-view'); show('main-view'); renderNav(); return; }
     var cid=gv('s-cid'), csec=gv('s-csec'), rtok=gv('s-rtok'), akey=gv('s-akey'), priority=gv('s-priority');
     var errEl = document.getElementById('setup-err');
     if (!cid||!csec||!rtok||!akey) {
@@ -909,7 +940,7 @@ function loadSaved() {
 function goSettings() {
   hide('main-view'); show('setup-view');
   sv('s-cid',cfg.cid||''); sv('s-csec',cfg.csec||''); sv('s-rtok',cfg.rtok||''); sv('s-akey',cfg.akey||''); sv('s-priority',cfg.priority||'@csdecatur.net');
-  document.getElementById('setup-err').innerHTML=`<div style="font-size:11px;color:var(--cream-mute);margin-top:10px;">Credentials saved. <button onclick="nukeCreds()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;font-family:var(--font);text-decoration:underline;">Clear</button></div>`;
+  document.getElementById('setup-err').innerHTML=`<div style="font-size:11px;color:var(--text-3);margin-top:10px;">Credentials saved. <button onclick="nukeCreds()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;font-family:var(--font);text-decoration:underline;">Clear</button></div>`;
 }
 function nukeCreds() { try{localStorage.removeItem('iz2_cfg');}catch(e){} cfg={}; toast('Credentials cleared','info'); }
 
