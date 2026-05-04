@@ -1,16 +1,16 @@
 
 <!DOCTYPE html>
-<html lang="en" style="color-scheme: light;">
+<html lang="en" style="color-scheme:light;">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Inbox Zero"/>
+<meta name="theme-color" content="#0d2b6e"/>
 <title>Inbox Zero — AI Email Triage</title>
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="Inbox Zero" />
-<meta name="theme-color" content="#1a6fe8" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -735,19 +735,20 @@ input:-webkit-autofill:focus {
 *::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 4px; }
 </style>
 </head>
-<body style="background:#f4f7fc;color:#0f1f3d;">
+<body style="background:#f0f4fb;color:#0a1a3a;">
+
 <div class="shell">
   <nav class="topbar">
     <div class="logo">
       <div class="logo-icon">
-        <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 3.5h12M1 7h7.5M1 10.5h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 14 14" fill="none"><path d="M1 3.5h12M1 7h7.5M1 10.5h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </div>
       <span class="logo-text">Inbox Zero</span>
     </div>
     <div class="topbar-right" id="topbar-right"></div>
   </nav>
 
-  <!-- Setup -->
+  <!-- SETUP VIEW -->
   <div id="setup-view">
     <div class="setup-wrap">
       <div class="setup-hero">
@@ -757,57 +758,34 @@ input:-webkit-autofill:focus {
       </div>
       <div class="card">
         <div class="card-label">Gmail OAuth</div>
-        <div class="field"><label>Client ID</label><input type="text" id="s-cid" placeholder="xxxxxx.apps.googleusercontent.com"/></div>
-        <div class="field"><label>Client Secret</label><input type="password" id="s-csec" placeholder="GOCSPX-…"/></div>
-        <div class="field"><label>Refresh Token</label><input type="password" id="s-rtok" placeholder="1//0g…"/></div>
+        <div class="field"><label>Client ID</label><input type="text" id="s-cid" autocomplete="off" placeholder="xxxxxx.apps.googleusercontent.com"/></div>
+        <div class="field"><label>Client Secret</label><input type="password" id="s-csec" autocomplete="off" placeholder="GOCSPX-…"/></div>
+        <div class="field"><label>Refresh Token</label><input type="password" id="s-rtok" autocomplete="off" placeholder="1//0g…"/></div>
       </div>
       <div class="card">
         <div class="card-label">Claude AI</div>
-        <div class="field"><label>Anthropic API Key</label><input type="password" id="s-akey" placeholder="sk-ant-…"/></div>
+        <div class="field"><label>Anthropic API Key</label><input type="password" id="s-akey" autocomplete="off" placeholder="sk-ant-…"/></div>
       </div>
       <div class="card">
         <div class="card-label">Triage settings</div>
-        <div class="field"><label>Priority senders — always flag (comma-separated)</label><input type="text" id="s-priority" value="@csdecatur.net" placeholder="@company.com, vip@example.com"/></div>
+        <div class="field"><label>Priority senders (comma-separated)</label><input type="text" id="s-priority" value="@csdecatur.net"/></div>
       </div>
       <div class="notice">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 5.5v.2" stroke-linecap="round"/></svg>
-        Credentials stored in browser localStorage only. Never sent anywhere except directly to Google and Anthropic APIs.
+        Credentials are saved in your browser only. Never sent to Anthropic — only to Google and Anthropic APIs directly.
       </div>
-      <div style="margin-top:1.25rem;"><button class="btn btn-primary btn-full" style="font-size:16px;height:54px;cursor:pointer;" 
-  onclick="(function(){
-    try {
-      var cid=document.getElementById('s-cid').value.trim();
-      var csec=document.getElementById('s-csec').value.trim();
-      var rtok=document.getElementById('s-rtok').value.trim();
-      var akey=document.getElementById('s-akey').value.trim();
-      var priority=document.getElementById('s-priority').value.trim();
-      var errEl=document.getElementById('setup-err');
-      if(!cid||!csec||!rtok||!akey){
-        errEl.innerHTML='<div style=\'padding:12px 16px;border-radius:14px;background:rgba(214,48,49,0.08);border:1.5px solid rgba(214,48,49,0.2);color:#d63031;font-size:15px;margin-top:8px;font-weight:500;\'>Please fill in all four credential fields.</div>';
-        return;
-      }
-      window._iz_cfg={cid:cid,csec:csec,rtok:rtok,akey:akey,priority:priority||'@csdecatur.net'};
-      if(typeof cfg!=='undefined') { cfg=window._iz_cfg; }
-      try{localStorage.setItem('iz2_cfg',JSON.stringify(window._iz_cfg));}catch(e){}
-      var sv=document.getElementById('setup-view');
-      var mv=document.getElementById('main-view');
-      if(sv) sv.style.display='none';
-      if(mv){ mv.style.display='block'; mv.style.visibility='visible'; }
-      if(typeof renderNav==='function') renderNav();
-    } catch(e) {
-      var errEl2=document.getElementById('setup-err');
-      if(errEl2) errEl2.innerHTML='<div style=\'padding:12px;background:rgba(214,48,49,0.08);border:1.5px solid rgba(214,48,49,0.2);color:#d63031;border-radius:14px;margin-top:8px;\'>Error: '+e.message+'</div>';
-    }
-  })()">Get started →</button></div>
-      <div id="setup-err"></div>
+      <div style="margin-top:20px;">
+        <button id="btn-launch" class="btn btn-primary btn-full" style="font-size:17px;height:56px;">Get started →</button>
+      </div>
+      <div id="setup-err" style="margin-top:12px;"></div>
     </div>
   </div>
 
-  <!-- Main -->
+  <!-- MAIN VIEW -->
   <div id="main-view" style="display:none;">
     <div class="main-hdr">
       <div class="greeting-bar">
-        <div class="greeting-title" id="greeting-title">Good morning 👋</div>
+        <div class="greeting-title" id="greeting-title">Your inbox</div>
         <div class="greeting-sub" id="main-sub">Select a timeframe and run triage.</div>
       </div>
       <div class="main-controls">
@@ -817,8 +795,8 @@ input:-webkit-autofill:focus {
           <option value="3d">Last 3 days</option>
           <option value="7d">Last 7 days</option>
         </select>
-        <button class="btn btn-primary" style="flex:1;" onclick="runTriage()">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v3l2 2" stroke-linecap="round"/></svg>
+        <button id="btn-triage" class="btn btn-primary" style="flex:1;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v3l2 2" stroke-linecap="round"/></svg>
           Triage inbox
         </button>
       </div>
@@ -831,19 +809,21 @@ input:-webkit-autofill:focus {
     </div>
     <div id="briefing-area"></div>
     <div class="tabs">
-      <div class="tab active" id="tab-flagged" onclick="swTab('flagged')">Flagged <span class="tbadge red" id="b-f">0</span></div>
-      <div class="tab" id="tab-archive" onclick="swTab('archive')">Archive candidates <span class="tbadge amber" id="b-a">0</span></div>
-      <div class="tab" id="tab-all" onclick="swTab('all')">All emails</div>
-      <div class="tab" id="tab-todos" onclick="swTab('todos')">To-do <span class="tbadge green" id="b-td">0</span></div>
+      <div class="tab active" id="tab-flagged">Flagged <span class="tbadge red" id="b-f">0</span></div>
+      <div class="tab" id="tab-archive">Archive <span class="tbadge amber" id="b-a">0</span></div>
+      <div class="tab" id="tab-all">All emails</div>
+      <div class="tab" id="tab-todos">To-do <span class="tbadge green" id="b-td">0</span></div>
     </div>
     <div id="tab-content"><div class="empty-wrap"><div class="empty-icon">✉</div>Run triage to load your inbox</div></div>
   </div>
 </div>
 
-<button class="chat-fab" onclick="toggleChat()" title="Ask Claude">
-  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+<!-- Chat FAB -->
+<button id="chat-fab" class="chat-fab" title="Ask Claude">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 </button>
 
+<!-- Chat Panel -->
 <div class="chat-panel" id="chat-panel">
   <div class="cph">
     <div class="cph-l">
@@ -851,23 +831,22 @@ input:-webkit-autofill:focus {
       <div><div class="cph-name">Ask Claude</div><div class="cph-sub">Inbox-aware AI assistant</div></div>
     </div>
     <div class="cph-r">
-      <button class="cclear" onclick="clearChat()">Clear</button>
-      <button class="btn btn-ghost btn-icon btn-sm" onclick="toggleChat()">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
+      <button id="btn-chat-clear" class="cclear">Clear</button>
+      <button id="btn-chat-close" class="btn btn-ghost btn-icon btn-sm">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
       </button>
     </div>
   </div>
   <div class="cctx">
-    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 5.5v.2" stroke-linecap="round"/></svg>
     <span class="cctx-val" id="cctx-lbl">No inbox loaded yet</span>
   </div>
   <div class="cmsgs" id="cmsgs">
-    <div class="cmsg assistant"><div class="cbubble">Hi! I'm Claude. Ask me anything about your emails, how to respond, or anything else. Once you run triage I'll have full context of your inbox.</div></div>
+    <div class="cmsg assistant"><div class="cbubble">Hi! I'm Claude. Ask me anything about your emails or anything else. Run triage first and I'll have full context of your inbox.</div></div>
   </div>
   <div class="cinput-row">
-    <textarea class="cta" id="cta" placeholder="Ask anything…" rows="1" onkeydown="chatKey(event)" oninput="chatResize(this)"></textarea>
-    <button class="csend" id="csend" onclick="sendChat()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    <textarea id="cta" class="cta" placeholder="Ask anything…" rows="1"></textarea>
+    <button id="btn-chat-send" class="csend">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
     </button>
   </div>
 </div>
@@ -875,601 +854,780 @@ input:-webkit-autofill:focus {
 <div class="tstack" id="tstack"></div>
 
 <script>
-// ── Core utils first — must be available before anything else ──
-function show(id){var el=document.getElementById(id);if(el){el.style.display='block';}}
-function hide(id){var el=document.getElementById(id);if(el){el.style.display='none';}}
-function gv(id){var el=document.getElementById(id);return el?el.value.trim():'';}
-function sv(id,val){var el=document.getElementById(id);if(el)el.value=val;}
+// ============================================================
+// INBOX ZERO — Clean rewrite, addEventListener only
+// No onclick attributes. All events wired in init().
+// ============================================================
 
-let cfg={}, emails=[], results={flagged:[],archive:[],all:[]}, expanded=new Set(), composers={}, selected=new Set(), actioned=0, activeTab='flagged', token=null, chatOpen=false, chatHistory=[], chatBusy=false;
+var App = (function() {
 
-document.addEventListener('DOMContentLoaded', function(){
-  try {
-    loadSaved(); loadTodos(); renderNav(); upTodoBadge();
-    var h = new Date().getHours();
-    var greet = h < 12 ? 'Good morning 👋' : h < 17 ? 'Good afternoon 👋' : 'Good evening 👋';
-    var el = document.getElementById('greeting-title');
-    if (el) el.textContent = greet;
-  } catch(e) {
-    var err = document.getElementById('setup-err');
-    if (err) err.innerHTML = '<div class="err-banner">Init error: ' + e.message + '</div>';
+  // ── State ────────────────────────────────────────────────
+  var cfg = {};
+  var emails = [];
+  var results = { flagged: [], archive: [], all: [] };
+  var expanded = {};
+  var composers = {};
+  var selected = {};
+  var actioned = 0;
+  var activeTab = 'flagged';
+  var gmailToken = null;
+  var chatOpen = false;
+  var chatHistory = [];
+  var chatBusy = false;
+  var todos = [];
+  var pendingSuggestions = [];
+  var editingTodoId = null;
+
+  // ── DOM helpers ──────────────────────────────────────────
+  function el(id) { return document.getElementById(id); }
+  function show(id) { var e = el(id); if (e) e.style.display = 'block'; }
+  function hide(id) { var e = el(id); if (e) e.style.display = 'none'; }
+  function txt(id, val) { var e = el(id); if (e) e.textContent = val; }
+  function val(id) { var e = el(id); return e ? e.value.trim() : ''; }
+  function setVal(id, v) { var e = el(id); if (e) e.value = v || ''; }
+  function setHTML(id, html) { var e = el(id); if (e) e.innerHTML = html; }
+
+  function on(id, evt, fn) {
+    var e = el(id);
+    if (e) e.addEventListener(evt, fn);
   }
-});
 
-function renderNav() {
-  document.getElementById('topbar-right').innerHTML = cfg.cid
-    ? `<button class="btn btn-sm" onclick="goSettings()">Settings</button>` : '';
-}
+  function toast(msg, type) {
+    type = type || 'info';
+    var s = el('tstack');
+    if (!s) return;
+    var d = document.createElement('div');
+    d.className = 'toast ' + type;
+    d.textContent = msg;
+    s.appendChild(d);
+    setTimeout(function() { if (d.parentNode) d.parentNode.removeChild(d); }, 3200);
+  }
 
-function launch() {
-  try {
-    if(window._iz_cfg && window._iz_cfg.cid) { cfg=window._iz_cfg; hide('setup-view'); show('main-view'); renderNav(); return; }
-    var cid=gv('s-cid'), csec=gv('s-csec'), rtok=gv('s-rtok'), akey=gv('s-akey'), priority=gv('s-priority');
-    var errEl = document.getElementById('setup-err');
-    if (!cid||!csec||!rtok||!akey) {
-      errEl.innerHTML='<div class="err-banner">Please fill in all four credential fields.</div>';
-      errEl.scrollIntoView({behavior:'smooth',block:'center'});
+  function esc(s) {
+    return String(s || '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Credentials & setup ──────────────────────────────────
+  function loadSaved() {
+    try {
+      var s = localStorage.getItem('iz3_cfg');
+      if (!s) return false;
+      var saved = JSON.parse(s);
+      if (!saved || !saved.cid || !saved.akey) return false;
+      cfg = saved;
+      setVal('s-cid', cfg.cid);
+      setVal('s-csec', cfg.csec);
+      setVal('s-rtok', cfg.rtok);
+      setVal('s-akey', cfg.akey);
+      setVal('s-priority', cfg.priority || '@csdecatur.net');
+      return true;
+    } catch(e) { return false; }
+  }
+
+  function saveCreds() {
+    try { localStorage.setItem('iz3_cfg', JSON.stringify(cfg)); } catch(e) {}
+  }
+
+  function launch() {
+    var cid = val('s-cid');
+    var csec = val('s-csec');
+    var rtok = val('s-rtok');
+    var akey = val('s-akey');
+    var priority = val('s-priority') || '@csdecatur.net';
+
+    if (!cid || !csec || !rtok || !akey) {
+      setHTML('setup-err', '<div class="err-banner">Please fill in all four credential fields.</div>');
       return;
     }
-    cfg={cid:cid,csec:csec,rtok:rtok,akey:akey,priority:priority||'@csdecatur.net'};
-    try { localStorage.setItem('iz2_cfg',JSON.stringify(cfg)); } catch(storageErr) {
-      // localStorage blocked (private browsing etc) — continue anyway, creds live in memory
-      console.warn('localStorage unavailable:', storageErr);
-    }
+    cfg = { cid: cid, csec: csec, rtok: rtok, akey: akey, priority: priority };
+    saveCreds();
     hide('setup-view');
     show('main-view');
     renderNav();
-  } catch(e) {
-    console.error('launch() error:', e);
-    var errEl2 = document.getElementById('setup-err');
-    if(errEl2) errEl2.innerHTML='<div class="err-banner">Error: '+e.message+'</div>';
   }
-}
 
-function loadSaved() {
-  try {
-    var s=localStorage.getItem('iz2_cfg'); if(!s) return;
-    var saved=JSON.parse(s);
-    if(!saved||!saved.cid) return;
-    cfg=saved;
-    sv('s-cid',cfg.cid||''); sv('s-csec',cfg.csec||''); sv('s-rtok',cfg.rtok||''); sv('s-akey',cfg.akey||''); sv('s-priority',cfg.priority||'@csdecatur.net');
-    if (cfg.cid&&cfg.csec&&cfg.rtok&&cfg.akey) { hide('setup-view'); show('main-view'); }
-  } catch(e) { console.warn('loadSaved error:', e); }
-}
-
-function goSettings() {
-  hide('main-view'); show('setup-view');
-  sv('s-cid',cfg.cid||''); sv('s-csec',cfg.csec||''); sv('s-rtok',cfg.rtok||''); sv('s-akey',cfg.akey||''); sv('s-priority',cfg.priority||'@csdecatur.net');
-  document.getElementById('setup-err').innerHTML=`<div style="font-size:11px;color:var(--text-3);margin-top:10px;">Credentials saved. <button onclick="nukeCreds()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;font-family:var(--font);text-decoration:underline;">Clear</button></div>`;
-}
-function nukeCreds() { try{localStorage.removeItem('iz2_cfg');}catch(e){} cfg={}; toast('Credentials cleared','info'); }
-
-async function getToken() {
-  const r=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:`client_id=${encodeURIComponent(cfg.cid)}&client_secret=${encodeURIComponent(cfg.csec)}&refresh_token=${encodeURIComponent(cfg.rtok)}&grant_type=refresh_token`});
-  const d=await r.json(); if(!d.access_token) throw new Error(d.error_description||'OAuth failed. Check credentials.');
-  token=d.access_token; return token;
-}
-
-async function gapi(path,opts={}) {
-  if(!token) await getToken();
-  const res=await fetch('https://gmail.googleapis.com/gmail/v1/users/me'+path,{...opts,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',...(opts.headers||{})}});
-  if(res.status===401){token=null;await getToken();return gapi(path,opts);}
-  return res.json();
-}
-
-async function runTriage() {
-  const tf=document.getElementById('tf-sel').value;
-  setC('<div class="loading-wrap"><div class="spinner"></div>Connecting to Gmail…</div>');
-  upStats(0,0,0);
-  try {
-    await getToken();
-    const list=await gapi(`/messages?maxResults=50&q=in:inbox newer_than:${tf}`);
-    if(!list.messages?.length){setC('<div class="empty-wrap"><div class="empty-icon">✓</div>No emails in this timeframe.</div>');return;}
-    setC(`<div class="loading-wrap"><div class="spinner"></div>Loading ${list.messages.length} emails…</div>`);
-    const details=await Promise.all(list.messages.slice(0,50).map(m=>gapi(`/messages/${m.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date&metadataHeaders=To`)));
-    emails=details.map(msg=>{
-      const h={}; (msg.payload?.headers||[]).forEach(x=>h[x.name.toLowerCase()]=x.value);
-      return{id:msg.id,threadId:msg.threadId,from:h.from||'',subject:h.subject||'(no subject)',date:h.date||'',snippet:msg.snippet||'',labels:msg.labelIds||[]};
+  function goSettings() {
+    hide('main-view');
+    show('setup-view');
+    setVal('s-cid', cfg.cid);
+    setVal('s-csec', cfg.csec);
+    setVal('s-rtok', cfg.rtok);
+    setVal('s-akey', cfg.akey);
+    setVal('s-priority', cfg.priority);
+    setHTML('setup-err', '<div style="font-size:13px;color:#8a98b8;margin-top:8px;">Credentials saved. <button id="btn-clear-creds" style="background:none;border:none;color:#d63031;cursor:pointer;font-size:13px;text-decoration:underline;padding:0;">Clear</button></div>');
+    on('btn-clear-creds', 'click', function() {
+      try { localStorage.removeItem('iz3_cfg'); } catch(e) {}
+      cfg = {};
+      toast('Credentials cleared', 'info');
     });
-    setC('<div class="loading-wrap"><div class="spinner"></div>Analyzing with Claude AI…</div>');
-    await claudeTriage(emails);
-  } catch(e){setC(`<div class="err-banner">${e.message}</div>`);}
-}
-
-async function claudeTriage(list) {
-  const ed=list.map((e,i)=>`[${i}] FROM: ${e.from}\nSUBJECT: ${e.subject}\nDATE: ${e.date}\nSNIPPET: ${e.snippet}`).join('\n\n');
-  const prompt=`You are an expert email triage assistant. Analyze these ${list.length} emails and return ONLY valid JSON — no markdown, no explanation.
-
-FLAG if ANY apply:
-1. Time-sensitive: deadline, event, appointment, expiration
-2. Requires response or action
-3. Financial: bill, invoice, payment, statement, account alert, overdue
-4. From priority sender: ${cfg.priority||'@csdecatur.net'}
-5. Legal, medical, government
-6. Security: login alert, password reset, account compromise
-
-ARCHIVE if: newsletter, promotional, marketing, automated sale/discount, low-value digest
-
-The "briefing" field must be a single flowing paragraph (3-6 sentences, max 100 words) written like a morning briefing from a chief of staff. Mention specific senders and subjects by name. Lead with the most urgent items. Make it scannable in under 30 seconds. If there are no flagged emails, write "Your inbox is clear — no action items at this time."
-
-Return exactly: {"flagged":[{"index":0,"reason":"short reason","summary":"2-3 sentence description and what action needed","urgency":"high|medium|low"}],"archive":[{"index":0,"reason":"short reason"}],"overview":"one sentence inbox summary","briefing":"flowing paragraph summary of flagged emails for quick digestion"}
-
-EMAILS:
-${ed}\`; 
-  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':cfg.akey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
-  const data=await res.json();
-  let raw=(data.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim();
-  let parsed; try{parsed=JSON.parse(raw);}catch(e){parsed={flagged:[],archive:[],overview:'Triage complete.'};}
-  results.flagged=(parsed.flagged||[]).map(f=>({...list[f.index],triageReason:f.reason,triageSummary:f.summary,urgency:f.urgency})).filter(x=>x.id);
-  results.archive=(parsed.archive||[]).map(a=>({...list[a.index],triageReason:a.reason})).filter(x=>x.id);
-  results.all=list; expanded.clear(); composers={}; selected.clear();
-  document.getElementById('main-sub').textContent=parsed.overview||'Triage complete.';
-  document.getElementById('b-f').textContent=results.flagged.length;
-  document.getElementById('b-a').textContent=results.archive.length;
-  upStats(list.length,results.flagged.length,results.archive.length);
-  renderBriefing(parsed.briefing||'', parsed.flagged||[]);
-  upCCtx(); renderTab();
-  if(results.flagged.length) suggestTodos(results.flagged);
-}
-
-
-function renderBriefing(text, flaggedRaw) {
-  const area = document.getElementById('briefing-area');
-  if (!area) return;
-  if (!text || !text.trim()) { area.innerHTML = ''; return; }
-
-  // Count urgencies
-  const high   = (flaggedRaw||[]).filter(f=>f.urgency==='high').length;
-  const medium = (flaggedRaw||[]).filter(f=>f.urgency==='medium').length;
-  const low    = (flaggedRaw||[]).filter(f=>f.urgency==='low').length;
-  const now    = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-
-  let chips = '';
-  if (high)   chips += `<span class="briefing-chip red"><span style="width:5px;height:5px;border-radius:50%;background:var(--red);display:inline-block;"></span>${high} urgent</span>`;
-  if (medium) chips += `<span class="briefing-chip amber"><span style="width:5px;height:5px;border-radius:50%;background:var(--amber);display:inline-block;"></span>${medium} medium</span>`;
-  if (low)    chips += `<span class="briefing-chip green"><span style="width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;"></span>${low} low</span>`;
-
-  area.innerHTML = `
-    <div class="briefing-card" id="briefing-card">
-      <div class="briefing-header">
-        <div class="briefing-label">
-          <div class="briefing-dot"></div>
-          <span class="briefing-title">Briefing</span>
-        </div>
-        <button class="briefing-dismiss" onclick="dismissBriefing()" title="Dismiss">×</button>
-      </div>
-      <div class="briefing-text">${esc(text)}</div>
-      <div class="briefing-meta">
-        ${chips}
-        <span class="briefing-time">Last updated ${now}</span>
-      </div>
-    </div>`;
-}
-
-function dismissBriefing() {
-  const card = document.getElementById('briefing-card');
-  if (card) {
-    card.style.transition = 'opacity 0.2s, transform 0.2s';
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(-4px)';
-    setTimeout(() => { const area = document.getElementById('briefing-area'); if(area) area.innerHTML=''; }, 220);
   }
-}
 
-function upStats(t,f,a){document.getElementById('st-t').textContent=t||'—';document.getElementById('st-f').textContent=f||'—';document.getElementById('st-a').textContent=a||'—';}
+  function renderNav() {
+    var nav = el('topbar-right');
+    if (!nav) return;
+    if (cfg.cid) {
+      nav.innerHTML = '<button id="btn-settings" class="btn btn-sm">Settings</button>';
+      on('btn-settings', 'click', goSettings);
+    } else {
+      nav.innerHTML = '';
+    }
+  }
 
-function swTab(tab){activeTab=tab;selected.clear();['flagged','archive','all','todos'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('active',t===tab));renderTab();}
-function setC(html){document.getElementById('tab-content').innerHTML=html;}
+  // ── Gmail API ────────────────────────────────────────────
+  function getToken() {
+    return fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'client_id=' + encodeURIComponent(cfg.cid) +
+            '&client_secret=' + encodeURIComponent(cfg.csec) +
+            '&refresh_token=' + encodeURIComponent(cfg.rtok) +
+            '&grant_type=refresh_token'
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.access_token) throw new Error(d.error_description || 'OAuth failed — check your credentials.');
+      gmailToken = d.access_token;
+      return gmailToken;
+    });
+  }
 
-function renderTab(){
-  if(activeTab==='todos'){renderTodos();return;}
-  const list=results[activeTab]||[];
-  if(!list.length){setC('<div class="empty-wrap"><div class="empty-icon">'+(results.all.length?'✓':'✉')+'</div>'+(results.all.length?'Nothing here.':'Run triage to load your inbox.')+'</div>');return;}
-  let html='';
-  if(list.length>1) html+=`<div class="bulk-bar"><input type="checkbox" id="sel-all" onclick="togAll(this.checked)" style="width:14px;height:14px;cursor:pointer;accent-color:var(--cream);"/><label for="sel-all">Select all ${list.length}</label><div style="flex:1"></div><button class="btn btn-red btn-sm" onclick="archiveSel()">Archive selected</button></div>`;
-  html+='<div class="email-list">';
-  list.forEach(email=>{
-    const isE=expanded.has(email.id), isS=selected.has(email.id);
-    const cls=activeTab==='flagged'?'flagged':activeTab==='archive'?'archv':'';
-    const ini=avatarIni(email.from);
-    const udot=email.urgency?`<span class="udot ${email.urgency}"></span>`:'';
-    html+=`<div class="ecard ${cls}" id="ec-${email.id}">
-      <div class="erow" onclick="togExp('${email.id}')">
-        <input type="checkbox" class="ecb" ${isS?'checked':''} onclick="event.stopPropagation();togSel('${email.id}',this.checked)"/>
-        <div class="eavatar">${ini}</div>
-        <div class="emeta">
-          <div class="etop">
-            <span class="efrom">${esc(sndrName(email.from))}</span>
-            <span class="esubj">${esc(email.subject)}</span>
-            <span class="edate">${fmtD(email.date)}</span>
-          </div>
-          <div class="esnip">${esc(email.snippet)}</div>
-          ${email.triageReason?`<span class="etag ${activeTab==='archive'?'amber':'red'}">${udot}${esc(email.triageReason)}</span>`:''}
-        </div>
-      </div>`;
-    if(isE){
-      html+=`<div class="eexpanded">`;
-      if(email.triageSummary) html+=`<div class="esummary">${esc(email.triageSummary)}</div>`;
-      if(email.fullBody) html+=`<div class="efullbody">${esc(email.fullBody)}</div>`;
-      html+=`<div class="eactions">
-        ${activeTab!=='archive'?`<button class="btn btn-blue btn-sm" onclick="openC('${email.id}')">Draft reply</button>`:''}
-        <button class="btn btn-red btn-sm" onclick="archOne('${email.id}')">Archive</button>
-        ${!email.fullBody?`<button class="btn btn-sm" onclick="loadFull('${email.id}')">Load full email</button>`:''}
-      </div></div>`;
-      if(composers[email.id]){
-        html+=`<div class="composer">
-          <div class="clbl">Reply to ${esc(sndrName(email.from))}</div>
-          <div class="cinstr"><input type="text" id="instr-${email.id}" placeholder="Instructions: 'decline politely', 'ask for timeline'…"/><button class="btn btn-blue btn-sm" onclick="genReply('${email.id}')">Generate</button></div>
-          <textarea class="rta" id="rta-${email.id}" placeholder="Generated reply will appear here — edit before sending…"></textarea>
-          <div class="cfooter"><button class="btn btn-sm" onclick="closeC('${email.id}')">Cancel</button><button class="btn btn-green btn-sm" onclick="sendReply('${email.id}')">Send reply</button></div>
-        </div>`;
+  function gapi(path, opts) {
+    opts = opts || {};
+    var doFetch = function() {
+      return fetch('https://gmail.googleapis.com/gmail/v1/users/me' + path, {
+        method: opts.method || 'GET',
+        headers: { Authorization: 'Bearer ' + gmailToken, 'Content-Type': 'application/json' },
+        body: opts.body || undefined
+      }).then(function(r) { return r.json(); });
+    };
+    if (gmailToken) return doFetch();
+    return getToken().then(doFetch);
+  }
+
+  function claudeAPI(messages, systemPrompt, maxTokens) {
+    var body = {
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: maxTokens || 1000,
+      messages: messages
+    };
+    if (systemPrompt) body.system = systemPrompt;
+    return fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': cfg.akey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(body)
+    }).then(function(r) { return r.json(); });
+  }
+
+  // ── Triage ───────────────────────────────────────────────
+  function runTriage() {
+    var tf = val('tf-sel') || '1d';
+    setHTML('tab-content', '<div class="loading-wrap"><div class="spinner"></div>Connecting to Gmail…</div>');
+    setHTML('briefing-area', '');
+    upStats(0, 0, 0);
+
+    getToken()
+      .then(function() {
+        return gapi('/messages?maxResults=50&q=in:inbox newer_than:' + tf);
+      })
+      .then(function(list) {
+        if (!list.messages || !list.messages.length) {
+          setHTML('tab-content', '<div class="empty-wrap"><div class="empty-icon">✓</div>No emails in this timeframe.</div>');
+          return null;
+        }
+        setHTML('tab-content', '<div class="loading-wrap"><div class="spinner"></div>Loading ' + list.messages.length + ' emails…</div>');
+        var fetches = list.messages.slice(0, 50).map(function(m) {
+          return gapi('/messages/' + m.id + '?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date');
+        });
+        return Promise.all(fetches);
+      })
+      .then(function(details) {
+        if (!details) return;
+        emails = details.map(function(msg) {
+          var h = {};
+          (msg.payload && msg.payload.headers || []).forEach(function(x) { h[x.name.toLowerCase()] = x.value; });
+          return { id: msg.id, threadId: msg.threadId, from: h.from || '', subject: h.subject || '(no subject)', date: h.date || '', snippet: msg.snippet || '' };
+        });
+        setHTML('tab-content', '<div class="loading-wrap"><div class="spinner"></div>Analyzing with Claude AI…</div>');
+        return claudeTriage(emails);
+      })
+      .catch(function(e) {
+        setHTML('tab-content', '<div class="err-banner" style="margin:1rem;">' + esc(e.message) + '</div>');
+      });
+  }
+
+  function claudeTriage(list) {
+    var emailData = list.map(function(e, i) {
+      return '[' + i + '] FROM: ' + e.from + '\nSUBJECT: ' + e.subject + '\nSNIPPET: ' + e.snippet;
+    }).join('\n\n');
+
+    var prompt = 'Analyze these ' + list.length + ' emails. Return ONLY valid JSON, no markdown.\n\n' +
+      'FLAG if ANY: time-sensitive, requires action, financial/account alert, security alert, from priority sender (' + (cfg.priority || '@csdecatur.net') + '), legal/medical/government.\n' +
+      'ARCHIVE if: newsletter, promotional, marketing, automated digest.\n\n' +
+      'The briefing field must be 3-5 sentences written like a chief of staff morning briefing, naming specific senders and subjects, leading with urgent items, max 100 words.\n\n' +
+      'Return: {"flagged":[{"index":0,"reason":"short reason","summary":"2-3 sentences on what this is and what action is needed","urgency":"high|medium|low"}],"archive":[{"index":0,"reason":"short reason"}],"overview":"one sentence","briefing":"paragraph"}\n\nEMAILS:\n' + emailData;
+
+    return claudeAPI([{ role: 'user', content: prompt }], null, 2500)
+      .then(function(data) {
+        var raw = (data.content && data.content[0] && data.content[0].text || '{}').replace(/```json|```/g, '').trim();
+        var parsed;
+        try { parsed = JSON.parse(raw); } catch(e) { parsed = { flagged:[], archive:[], overview:'Triage complete.', briefing:'' }; }
+
+        results.flagged = (parsed.flagged || []).map(function(f) {
+          var e = list[f.index];
+          if (!e) return null;
+          return Object.assign({}, e, { triageReason: f.reason, triageSummary: f.summary, urgency: f.urgency });
+        }).filter(Boolean);
+
+        results.archive = (parsed.archive || []).map(function(a) {
+          var e = list[a.index];
+          if (!e) return null;
+          return Object.assign({}, e, { triageReason: a.reason });
+        }).filter(Boolean);
+
+        results.all = list;
+        expanded = {}; composers = {}; selected = {};
+
+        txt('main-sub', parsed.overview || 'Triage complete.');
+        txt('b-f', results.flagged.length);
+        txt('b-a', results.archive.length);
+        upStats(list.length, results.flagged.length, results.archive.length);
+        renderBriefing(parsed.briefing || '', parsed.flagged || []);
+        upChatCtx();
+        renderTab();
+        if (results.flagged.length) suggestTodos(results.flagged);
+      });
+  }
+
+  function upStats(t, f, a) {
+    txt('st-t', t || '—'); txt('st-f', f || '—'); txt('st-a', a || '—');
+  }
+
+  // ── Briefing card ────────────────────────────────────────
+  function renderBriefing(text, flaggedRaw) {
+    var area = el('briefing-area');
+    if (!area || !text) return;
+    var high = (flaggedRaw || []).filter(function(f) { return f.urgency === 'high'; }).length;
+    var med  = (flaggedRaw || []).filter(function(f) { return f.urgency === 'medium'; }).length;
+    var low  = (flaggedRaw || []).filter(function(f) { return f.urgency === 'low'; }).length;
+    var now  = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    var chips = '';
+    if (high) chips += '<span class="briefing-chip"><span style="width:5px;height:5px;border-radius:50%;background:#fff;display:inline-block;opacity:0.9;"></span>' + high + ' urgent</span>';
+    if (med)  chips += '<span class="briefing-chip">' + med + ' medium</span>';
+    if (low)  chips += '<span class="briefing-chip">' + low + ' low</span>';
+    area.innerHTML = '<div class="briefing-card" id="briefing-card">' +
+      '<div class="briefing-header">' +
+        '<div class="briefing-label"><div class="briefing-dot"></div><span class="briefing-title">Briefing</span></div>' +
+        '<button id="btn-dismiss-briefing" class="briefing-dismiss" aria-label="Dismiss">×</button>' +
+      '</div>' +
+      '<div class="briefing-text">' + esc(text) + '</div>' +
+      '<div class="briefing-meta">' + chips + '<span class="briefing-time">Updated ' + now + '</span></div>' +
+    '</div>';
+    on('btn-dismiss-briefing', 'click', function() {
+      var card = el('briefing-card');
+      if (card && card.parentNode) card.parentNode.innerHTML = '';
+    });
+  }
+
+  // ── Tab rendering ────────────────────────────────────────
+  function swTab(tab) {
+    activeTab = tab;
+    selected = {};
+    ['flagged','archive','all','todos'].forEach(function(t) {
+      var e = el('tab-' + t);
+      if (e) e.classList.toggle('active', t === tab);
+    });
+    renderTab();
+  }
+
+  function renderTab() {
+    if (activeTab === 'todos') { renderTodos(); return; }
+    var list = results[activeTab] || [];
+    if (!list.length) {
+      setHTML('tab-content', '<div class="empty-wrap"><div class="empty-icon">' + (results.all.length ? '✓' : '✉') + '</div>' + (results.all.length ? 'Nothing here.' : 'Run triage to load your inbox.') + '</div>');
+      return;
+    }
+    var html = '';
+    if (list.length > 1) {
+      html += '<div class="bulk-bar"><input type="checkbox" id="cb-select-all" style="width:18px;height:18px;accent-color:#0d2b6e;cursor:pointer;"><label for="cb-select-all" style="margin-left:4px;">Select all ' + list.length + '</label><div style="flex:1"></div><button id="btn-archive-sel" class="btn btn-red btn-sm">Archive selected</button></div>';
+    }
+    html += '<div class="email-list">';
+    list.forEach(function(email) {
+      var isExp = !!expanded[email.id];
+      var isSel = !!selected[email.id];
+      var cls = activeTab === 'flagged' ? 'flagged' : activeTab === 'archive' ? 'archv' : '';
+      var ini = avatarIni(email.from);
+      var urgDot = email.urgency ? '<span class="udot ' + email.urgency + '"></span>' : '';
+      html += '<div class="ecard ' + cls + '" id="ec-' + email.id + '">';
+      html +=   '<div class="erow" id="erow-' + email.id + '">';
+      html +=     '<input type="checkbox" class="ecb" id="ecb-' + email.id + '" ' + (isSel ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:#0d2b6e;">';
+      html +=     '<div class="eavatar">' + esc(ini) + '</div>';
+      html +=     '<div class="emeta">';
+      html +=       '<div class="etop"><span class="efrom">' + esc(senderName(email.from)) + '</span><span class="esubj">' + esc(email.subject) + '</span><span class="edate">' + fmtDate(email.date) + '</span></div>';
+      html +=       '<div class="esnip">' + esc(email.snippet) + '</div>';
+      if (email.triageReason) html += '<span class="etag ' + (activeTab === 'archive' ? 'amber' : 'red') + '">' + urgDot + esc(email.triageReason) + '</span>';
+      html +=     '</div>';
+      html +=   '</div>';
+      if (isExp) {
+        html += '<div class="eexpanded">';
+        if (email.triageSummary) html += '<div class="esummary">' + esc(email.triageSummary) + '</div>';
+        if (email.fullBody) html += '<div class="efullbody">' + esc(email.fullBody) + '</div>';
+        html += '<div class="eactions">';
+        if (activeTab !== 'archive') html += '<button class="btn btn-blue btn-sm" id="open-compose-' + email.id + '">Draft reply</button>';
+        html += '<button class="btn btn-red btn-sm" id="arch-one-' + email.id + '">Archive</button>';
+        if (!email.fullBody) html += '<button class="btn btn-sm" id="load-full-' + email.id + '">Load full email</button>';
+        html += '</div></div>';
+        if (composers[email.id]) {
+          html += '<div class="composer">';
+          html +=   '<div class="clbl">Reply to ' + esc(senderName(email.from)) + '</div>';
+          html +=   '<div class="cinstr"><input type="text" id="instr-' + email.id + '" placeholder="Instructions: decline politely, ask for timeline…"><button class="btn btn-blue btn-sm" id="gen-reply-' + email.id + '">Generate</button></div>';
+          html +=   '<textarea class="rta" id="rta-' + email.id + '" placeholder="Generated reply will appear here — edit before sending…"></textarea>';
+          html +=   '<div class="cfooter"><button class="btn btn-sm" id="cancel-compose-' + email.id + '">Cancel</button><button class="btn btn-green btn-sm" id="send-reply-' + email.id + '">Send reply</button></div>';
+          html += '</div>';
+        }
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+    el('tab-content').innerHTML = html;
+
+    // Wire events after render
+    list.forEach(function(email) {
+      // Row expand toggle
+      var row = el('erow-' + email.id);
+      if (row) {
+        row.addEventListener('click', function(e) {
+          if (e.target.type === 'checkbox') return;
+          expanded[email.id] = !expanded[email.id];
+          if (!expanded[email.id]) delete composers[email.id];
+          renderTab();
+        });
+      }
+      // Checkbox
+      var cb = el('ecb-' + email.id);
+      if (cb) cb.addEventListener('change', function() { selected[email.id] = cb.checked; });
+      // Action buttons
+      var archOne = el('arch-one-' + email.id);
+      if (archOne) archOne.addEventListener('click', function(e) { e.stopPropagation(); archiveOne(email.id); });
+      var loadFull = el('load-full-' + email.id);
+      if (loadFull) loadFull.addEventListener('click', function(e) { e.stopPropagation(); loadFullEmail(email); });
+      var openCompose = el('open-compose-' + email.id);
+      if (openCompose) openCompose.addEventListener('click', function(e) { e.stopPropagation(); composers[email.id] = true; renderTab(); });
+      var cancelCompose = el('cancel-compose-' + email.id);
+      if (cancelCompose) cancelCompose.addEventListener('click', function(e) { e.stopPropagation(); delete composers[email.id]; renderTab(); });
+      var genReplyBtn = el('gen-reply-' + email.id);
+      if (genReplyBtn) genReplyBtn.addEventListener('click', function(e) { e.stopPropagation(); genReply(email); });
+      var sendReplyBtn = el('send-reply-' + email.id);
+      if (sendReplyBtn) sendReplyBtn.addEventListener('click', function(e) { e.stopPropagation(); sendReply(email); });
+    });
+
+    // Bulk bar
+    var selAll = el('cb-select-all');
+    if (selAll) selAll.addEventListener('change', function() {
+      list.forEach(function(e) { selected[e.id] = selAll.checked; });
+      renderTab();
+    });
+    var archSel = el('btn-archive-sel');
+    if (archSel) archSel.addEventListener('click', archiveSelected);
+  }
+
+  // ── Email actions ────────────────────────────────────────
+  function loadFullEmail(email) {
+    gapi('/messages/' + email.id + '?format=full').then(function(d) {
+      email.fullBody = extractBody(d.payload) || '(No plain text body)';
+      renderTab();
+    }).catch(function(e) { toast('Could not load email: ' + e.message, 'error'); });
+  }
+
+  function extractBody(payload) {
+    if (!payload) return '';
+    if (payload.body && payload.body.data) {
+      try { return atob(payload.body.data.replace(/-/g,'+').replace(/_/g,'/')); } catch(e) { return ''; }
+    }
+    if (payload.parts) {
+      for (var i = 0; i < payload.parts.length; i++) {
+        var p = payload.parts[i];
+        if (p.mimeType === 'text/plain' && p.body && p.body.data) {
+          try { return atob(p.body.data.replace(/-/g,'+').replace(/_/g,'/')); } catch(e) {}
+        }
+      }
+      for (var j = 0; j < payload.parts.length; j++) {
+        var r = extractBody(payload.parts[j]);
+        if (r) return r;
       }
     }
-    html+='</div>';
-  });
-  html+='</div>'; setC(html);
-}
+    return '';
+  }
 
-function togExp(id){if(expanded.has(id)){expanded.delete(id);delete composers[id];}else{expanded.add(id);}renderTab();}
-function togSel(id,v){v?selected.add(id):selected.delete(id);}
-function togAll(v){(results[activeTab]||[]).forEach(e=>v?selected.add(e.id):selected.delete(e.id));renderTab();}
-function openC(id){composers[id]=true;renderTab();setTimeout(()=>document.getElementById('instr-'+id)?.focus(),50);}
-function closeC(id){delete composers[id];renderTab();}
+  function genReply(email) {
+    var rta = el('rta-' + email.id);
+    var instr = val('instr-' + email.id);
+    if (!rta) return;
+    rta.value = 'Generating…'; rta.disabled = true;
+    var prompt = 'Write a professional, concise email reply.\n\nFrom: ' + email.from + '\nSubject: ' + email.subject + '\nContent: ' + (email.fullBody || email.snippet) + '\n' + (instr ? 'Instructions: ' + instr : 'Write an appropriate reply.') + '\n\nOutput only the reply body.';
+    claudeAPI([{ role: 'user', content: prompt }], null, 600)
+      .then(function(d) { rta.value = (d.content && d.content[0] && d.content[0].text) || 'Could not generate.'; rta.disabled = false; })
+      .catch(function(e) { rta.value = 'Error: ' + e.message; rta.disabled = false; });
+  }
 
-async function loadFull(id){
-  try{const d=await gapi(`/messages/${id}?format=full`);const b=exBody(d.payload);const e=(results[activeTab]||[]).find(x=>x.id===id);if(e){e.fullBody=b||'(No plain text body)';renderTab();}}
-  catch(err){toast('Could not load: '+err.message,'error');}
-}
-function exBody(p){
-  if(!p)return'';
-  if(p.body?.data){try{return atob(p.body.data.replace(/-/g,'+').replace(/_/g,'/'));}catch(e){return'';}}
-  if(p.parts){for(const x of p.parts)if(x.mimeType==='text/plain'&&x.body?.data){try{return atob(x.body.data.replace(/-/g,'+').replace(/_/g,'/'));}catch(e){}}for(const x of p.parts){const r=exBody(x);if(r)return r;}}
-  return'';
-}
-
-async function genReply(id){
-  const instr=document.getElementById('instr-'+id)?.value.trim()||'';
-  const rta=document.getElementById('rta-'+id); if(!rta)return;
-  const email=(results[activeTab]||[]).find(e=>e.id===id);
-  rta.value='Generating…'; rta.disabled=true;
-  try{
-    const ctx=email?.fullBody||email?.snippet||'';
-    const p=`Write a professional, concise email reply.\n\nFrom: ${email?.from||''}\nSubject: ${email?.subject||''}\nContent: ${ctx}\n${instr?'Instructions: '+instr:'Write an appropriate reply.'}\n\nOutput only the reply body.`;
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':cfg.akey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:p}]})});
-    const d=await res.json(); rta.value=d.content?.[0]?.text||'Could not generate.';
-  }catch(e){rta.value='Error: '+e.message;}
-  rta.disabled=false;
-}
-
-async function sendReply(id){
-  const rta=document.getElementById('rta-'+id); if(!rta?.value.trim()){toast('Reply is empty','error');return;}
-  const email=(results[activeTab]||[]).find(e=>e.id===id); if(!email)return;
-  const toA=exEmail(email.from), subj=email.subject.startsWith('Re:')?email.subject:'Re: '+email.subject;
-  const raw=btoa(unescape(encodeURIComponent(`To: ${toA}\r\nSubject: ${subj}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n${rta.value}`))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  try{
-    const body={raw}; if(email.threadId)body.threadId=email.threadId;
-    await gapi('/messages/send',{method:'POST',body:JSON.stringify(body)});
-    toast('Reply sent to '+toA,'success'); delete composers[id]; actioned++;
-    document.getElementById('st-act').textContent=actioned;
-    completeByEmailId(id); upTodoBadge();
-    renderTab();
-  }catch(e){toast('Send failed: '+e.message,'error');}
-}
-
-async function archOne(id){
-  try{await gapi(`/messages/${id}/modify`,{method:'POST',body:JSON.stringify({removeLabelIds:['INBOX']})});rmEmail(id);actioned++;document.getElementById('st-act').textContent=actioned;toast('Archived','success');upBadges();renderTab();}
-  catch(e){toast('Archive failed: '+e.message,'error');}
-}
-
-async function archiveSel(){
-  if(!selected.size){toast('No emails selected','error');return;}
-  const ids=[...selected];let ok=0;
-  for(const id of ids){try{await gapi(`/messages/${id}/modify`,{method:'POST',body:JSON.stringify({removeLabelIds:['INBOX']})});rmEmail(id);ok++;}catch(e){}}
-  actioned+=ok;selected.clear();document.getElementById('st-act').textContent=actioned;toast(`Archived ${ok} email${ok!==1?'s':''}`, 'success');upBadges();renderTab();
-}
-
-function rmEmail(id){results.flagged=results.flagged.filter(e=>e.id!==id);results.archive=results.archive.filter(e=>e.id!==id);results.all=results.all.filter(e=>e.id!==id);expanded.delete(id);delete composers[id];selected.delete(id);}
-function upBadges(){upStats(results.all.length,results.flagged.length,results.archive.length);document.getElementById('b-f').textContent=results.flagged.length;document.getElementById('b-a').textContent=results.archive.length;}
-
-// Chat
-function toggleChat(){chatOpen=!chatOpen;document.getElementById('chat-panel').classList.toggle('open',chatOpen);if(chatOpen)setTimeout(()=>document.getElementById('cta')?.focus(),280);}
-function clearChat(){chatHistory=[];document.getElementById('cmsgs').innerHTML='<div class="cmsg assistant"><div class="cbubble">Chat cleared. How can I help?</div></div>';}
-function chatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}}
-function chatResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,110)+'px';}
-function upCCtx(){const el=document.getElementById('cctx-lbl');el.textContent=results.all.length?`${results.all.length} emails — ${results.flagged.length} flagged, ${results.archive.length} to archive`:'No inbox loaded yet';}
-function bldCtx(){if(!results.all.length)return'No inbox data loaded.';const fl=results.flagged.map(e=>`- [${e.urgency||''}] ${e.from} | ${e.subject} | ${e.triageSummary||e.snippet}`).join('\n');const ar=results.archive.slice(0,10).map(e=>`- ${e.from} | ${e.subject}`).join('\n');return`Inbox (${results.all.length} emails):\n\nFLAGGED (${results.flagged.length}):\n${fl||'None'}\n\nARCHIVE (${results.archive.length}):\n${ar||'None'}`;}
-
-function addMsg(role,text,thinking=false){const msgs=document.getElementById('cmsgs');const d=document.createElement('div');d.className='cmsg '+role;d.innerHTML=`<div class="cbubble${thinking?' thinking':''}">${esc(text)}</div>`;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;}
-function updLastMsg(text){const msgs=document.getElementById('cmsgs');const last=msgs.querySelector('.cmsg.assistant:last-child .cbubble');if(last){last.classList.remove('thinking');last.textContent=text;}msgs.scrollTop=msgs.scrollHeight;}
-
-async function sendChat(){
-  if(chatBusy)return;
-  const ta=document.getElementById('cta'); const text=ta.value.trim(); if(!text)return;
-  if(!cfg.akey){addMsg('assistant','No API key — go to Settings.');return;}
-  ta.value='';ta.style.height='auto'; addMsg('user',text); chatHistory.push({role:'user',content:text});
-  chatBusy=true; document.getElementById('csend').disabled=true; addMsg('assistant','Thinking…',true);
-  const sys=`You are Claude, an AI assistant inside Inbox Zero, a Gmail triage tool. Be concise and direct.\n\n${bldCtx()}`;
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':cfg.akey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:chatHistory})});
-    const data=await res.json(); if(data.error)throw new Error(data.error.message||'API error');
-    const reply=data.content?.[0]?.text||'Sorry, no response.'; chatHistory.push({role:'assistant',content:reply}); updLastMsg(reply);
-  }catch(e){updLastMsg('Error: '+e.message);chatHistory.pop();}
-  chatBusy=false; document.getElementById('csend').disabled=false;
-}
-
-
-// ── Todos ──────────────────────────────────────────────
-// Each todo: { id, text, emailId, emailSubject, emailFrom, done, createdAt, completedAt }
-let todos = [];
-let pendingSuggestions = []; // suggested by Claude, awaiting accept/decline
-let editingTodoId = null;
-
-function loadTodos() {
-  try { todos = JSON.parse(localStorage.getItem('iz2_todos') || '[]'); } catch(e) { todos = []; }
-}
-
-function saveTodos() {
-  try { localStorage.setItem('iz2_todos', JSON.stringify(todos)); } catch(e) {}
-  upTodoBadge();
-}
-
-function upTodoBadge() {
-  const open = todos.filter(t => !t.done).length;
-  const el = document.getElementById('b-td');
-  if (el) el.textContent = open;
-}
-
-function todoId() { return 'td_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
-
-function addTodo(text, emailId, emailSubject, emailFrom) {
-  const t = { id: todoId(), text, emailId: emailId||null, emailSubject: emailSubject||null, emailFrom: emailFrom||null, done: false, createdAt: Date.now() };
-  todos.unshift(t);
-  saveTodos();
-  return t.id;
-}
-
-function completeTodo(id) {
-  const t = todos.find(x => x.id === id);
-  if (t) { t.done = true; t.completedAt = Date.now(); saveTodos(); }
-}
-
-function uncomplete(id) {
-  const t = todos.find(x => x.id === id);
-  if (t) { t.done = false; delete t.completedAt; saveTodos(); }
-}
-
-function deleteTodo(id) {
-  todos = todos.filter(x => x.id !== id);
-  saveTodos();
-}
-
-function completeByEmailId(emailId) {
-  todos.filter(t => t.emailId === emailId && !t.done).forEach(t => {
-    t.done = true; t.completedAt = Date.now(); t.autoCompleted = true;
-  });
-  saveTodos();
-}
-
-// Called after triage — asks Claude to suggest todos from flagged emails
-async function suggestTodos(flaggedEmails) {
-  if (!flaggedEmails.length || !cfg.akey) return;
-  const emailData = flaggedEmails.map((e,i) => `[${i}] FROM: ${e.from}
-SUBJECT: ${e.subject}
-SUMMARY: ${e.triageSummary||e.snippet}
-URGENCY: ${e.urgency||'medium'}`).join('
-
-');
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': cfg.akey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', max_tokens: 800,
-        messages: [{ role: 'user', content: `You are an email action extractor. Given these flagged emails, identify concrete action items the recipient needs to take. Only suggest todos where a specific action is clearly needed — skip purely informational emails.
-
-Return ONLY valid JSON, no markdown:
-{"todos":[{"emailIndex":0,"action":"specific action to take","priority":"high|medium|low"}]}
-
-EMAILS:
-${emailData}` }]
+  function sendReply(email) {
+    var rta = el('rta-' + email.id);
+    if (!rta || !rta.value.trim()) { toast('Reply is empty', 'error'); return; }
+    var toAddr = extractEmail(email.from);
+    var subj = email.subject.indexOf('Re:') === 0 ? email.subject : 'Re: ' + email.subject;
+    var raw = btoa(unescape(encodeURIComponent('To: ' + toAddr + '\r\nSubject: ' + subj + '\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n' + rta.value)))
+      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    var body = { raw: raw };
+    if (email.threadId) body.threadId = email.threadId;
+    gapi('/messages/send', { method: 'POST', body: JSON.stringify(body) })
+      .then(function() {
+        toast('Reply sent to ' + toAddr, 'success');
+        delete composers[email.id];
+        actioned++;
+        txt('st-act', actioned);
+        completeTodosByEmail(email.id);
+        renderTab();
       })
-    });
-    const data = await res.json();
-    let raw = (data.content?.[0]?.text || '{}').replace(/```json|```/g,'').trim();
-    let parsed; try { parsed = JSON.parse(raw); } catch(e) { parsed = { todos: [] }; }
-    pendingSuggestions = (parsed.todos||[]).map(t => ({
-      id: todoId(),
-      action: t.action,
-      email: flaggedEmails[t.emailIndex],
-      priority: t.priority || 'medium',
-      state: 'pending' // pending | accepted | declined
-    })).filter(t => t.email);
-    if (pendingSuggestions.length > 0) renderTab();
-  } catch(e) { console.error('Todo suggestion failed:', e); }
-}
-
-function acceptSuggestion(sid) {
-  const s = pendingSuggestions.find(x => x.id === sid);
-  if (!s) return;
-  s.state = 'accepted';
-  addTodo(s.action, s.email?.id, s.email?.subject, s.email?.from);
-  renderTodos();
-}
-
-function declineSuggestion(sid) {
-  const s = pendingSuggestions.find(x => x.id === sid);
-  if (s) { s.state = 'declined'; renderTodos(); }
-}
-
-function acceptAllSuggestions() {
-  pendingSuggestions.filter(s => s.state === 'pending').forEach(s => {
-    s.state = 'accepted';
-    addTodo(s.action, s.email?.id, s.email?.subject, s.email?.from);
-  });
-  renderTodos();
-}
-
-function declineAllSuggestions() {
-  pendingSuggestions.filter(s => s.state === 'pending').forEach(s => s.state = 'declined');
-  renderTodos();
-}
-
-function dismissSuggestions() {
-  pendingSuggestions = [];
-  renderTodos();
-}
-
-function startEditTodo(id) {
-  editingTodoId = id;
-  renderTodos();
-  setTimeout(() => document.getElementById('edit-' + id)?.focus(), 50);
-}
-
-function saveEditTodo(id) {
-  const el = document.getElementById('edit-' + id);
-  if (!el) return;
-  const t = todos.find(x => x.id === id);
-  if (t && el.value.trim()) { t.text = el.value.trim(); saveTodos(); }
-  editingTodoId = null;
-  renderTodos();
-}
-
-function editKeydown(e, id) {
-  if (e.key === 'Enter') { e.preventDefault(); saveEditTodo(id); }
-  if (e.key === 'Escape') { editingTodoId = null; renderTodos(); }
-}
-
-function addManualTodo() {
-  const inp = document.getElementById('todo-add-inp');
-  if (!inp || !inp.value.trim()) return;
-  addTodo(inp.value.trim(), null, null, null);
-  inp.value = '';
-  renderTodos();
-}
-
-function todoAddKey(e) { if (e.key === 'Enter') addManualTodo(); }
-
-function jumpToEmail(emailId) {
-  const email = results.all.find(e => e.id === emailId);
-  if (!email) { toast('Email no longer in current inbox view', 'info'); return; }
-  swTab('flagged');
-  expanded.add(emailId);
-  setTimeout(() => {
-    const el = document.getElementById('ec-' + emailId);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 100);
-}
-
-function renderTodos() {
-  if (activeTab !== 'todos') return;
-  const open = todos.filter(t => !t.done);
-  const done = todos.filter(t => t.done);
-  const hasPending = pendingSuggestions.some(s => s.state === 'pending');
-  const hasAny = pendingSuggestions.length > 0;
-
-  let html = '';
-
-  // Suggestions banner
-  if (hasAny) {
-    html += `<div class="todo-suggest-banner">
-      <div class="todo-suggest-hdr"><div class="todo-suggest-dot"></div><div class="todo-suggest-title">Claude suggestions</div></div>
-      <div class="todo-suggest-sub">Review suggested action items from your latest triage. Accept to add to your list, decline to dismiss.</div>
-      <div class="todo-suggest-list">`;
-    pendingSuggestions.forEach(s => {
-      const cls = s.state === 'declined' ? 'declined' : s.state === 'accepted' ? 'accepted' : '';
-      const icon = s.state === 'accepted' ? '✓' : s.state === 'declined' ? '✕' : '';
-      html += `<div class="todo-suggest-item ${cls}" id="sug-${s.id}">
-        <div class="todo-suggest-body">
-          <div class="todo-suggest-text">${esc(s.action)}</div>
-          <div class="todo-suggest-src">From: ${esc(sndrName(s.email?.from||''))} — ${esc(s.email?.subject||'')}</div>
-        </div>
-        <div class="todo-suggest-btns">
-          ${s.state === 'pending' ? `
-            <button class="btn btn-green btn-xs" onclick="acceptSuggestion('${s.id}')">Accept</button>
-            <button class="btn btn-red btn-xs" onclick="declineSuggestion('${s.id}')">Decline</button>
-          ` : `<span style="font-size:12px;color:${s.state==='accepted'?'var(--green)':'var(--cream-mute)'};">${icon}</span>`}
-        </div>
-      </div>`;
-    });
-    html += `</div>
-      <div class="todo-suggest-footer">
-        ${hasPending ? `<button class="btn btn-green btn-sm" onclick="acceptAllSuggestions()">Accept all</button><button class="btn btn-sm" onclick="declineAllSuggestions()">Decline all</button>` : ''}
-        <button class="btn btn-ghost btn-sm" onclick="dismissSuggestions()">Dismiss</button>
-      </div>
-    </div>`;
+      .catch(function(e) { toast('Send failed: ' + e.message, 'error'); });
   }
 
-  // Add manual todo
-  html += `<div class="todo-add-row">
-    <input type="text" class="todo-add-input" id="todo-add-inp" placeholder="Add a to-do manually…" onkeydown="todoAddKey(event)" />
-    <button class="btn btn-sm" onclick="addManualTodo()">Add</button>
-  </div>`;
-
-  // Open todos
-  if (open.length) {
-    html += `<div class="todo-section" style="margin-top:14px;">
-      <div class="todo-section-hdr">
-        <span class="todo-section-title">Open (${open.length})</span>
-      </div>
-      <div class="todo-list">`;
-    open.forEach(t => {
-      const isEditing = editingTodoId === t.id;
-      html += `<div class="todo-item" id="tdi-${t.id}">
-        <input type="checkbox" class="todo-cb" onchange="completeTodo('${t.id}');renderTodos();" />
-        <div class="todo-body">
-          ${isEditing
-            ? `<input type="text" class="todo-text-edit" id="edit-${t.id}" value="${esc(t.text)}" onkeydown="editKeydown(event,'${t.id}')" onblur="saveEditTodo('${t.id}')" />`
-            : `<div class="todo-text">${esc(t.text)}</div>`
-          }
-          <div class="todo-meta">
-            ${t.emailId ? `<span class="todo-source">Re: <button class="todo-source-link" onclick="jumpToEmail('${t.emailId}')">${esc(t.emailSubject||'email')}</button></span>` : '<span class="todo-source">Manual</span>'}
-          </div>
-        </div>
-        <div class="todo-actions">
-          ${!isEditing ? `<button class="btn btn-ghost btn-icon btn-xs" onclick="startEditTodo('${t.id}')" title="Edit" style="font-size:11px;">✎</button>` : ''}
-          <button class="btn btn-ghost btn-icon btn-xs" onclick="deleteTodo('${t.id}');renderTodos();" title="Delete" style="font-size:14px;color:var(--cream-mute);">×</button>
-        </div>
-      </div>`;
-    });
-    html += `</div></div>`;
-  } else if (!hasAny) {
-    html += `<div class="todo-empty"><div class="todo-empty-icon">✓</div>No open to-dos</div>`;
+  function archiveOne(emailId) {
+    gapi('/messages/' + emailId + '/modify', { method: 'POST', body: JSON.stringify({ removeLabelIds: ['INBOX'] }) })
+      .then(function() {
+        removeEmail(emailId); actioned++;
+        txt('st-act', actioned);
+        toast('Archived', 'success');
+        refreshBadges(); renderTab();
+      })
+      .catch(function(e) { toast('Archive failed: ' + e.message, 'error'); });
   }
 
-  // Completed todos
-  if (done.length) {
-    html += `<div class="todo-section" style="margin-top:18px;">
-      <div class="todo-section-hdr">
-        <span class="todo-section-title">Completed (${done.length})</span>
-        <button class="btn btn-ghost btn-xs" onclick="todos=todos.filter(t=>!t.done);saveTodos();renderTodos();">Clear all</button>
-      </div>
-      <div class="todo-list">`;
-    done.slice(0, 20).forEach(t => {
-      html += `<div class="todo-item done">
-        <input type="checkbox" class="todo-cb" checked onchange="uncomplete('${t.id}');renderTodos();" />
-        <div class="todo-body">
-          <div class="todo-text done-text">${esc(t.text)}</div>
-          ${t.emailSubject ? `<div class="todo-meta"><span class="todo-source">Re: ${esc(t.emailSubject)}</span></div>` : ''}
-        </div>
-        <div class="todo-actions">
-          <button class="btn btn-ghost btn-icon btn-xs" onclick="deleteTodo('${t.id}');renderTodos();" style="font-size:14px;color:var(--cream-mute);">×</button>
-        </div>
-      </div>`;
+  function archiveSelected() {
+    var ids = Object.keys(selected).filter(function(id) { return selected[id]; });
+    if (!ids.length) { toast('No emails selected', 'error'); return; }
+    var done = 0;
+    var total = ids.length;
+    ids.forEach(function(id) {
+      gapi('/messages/' + id + '/modify', { method: 'POST', body: JSON.stringify({ removeLabelIds: ['INBOX'] }) })
+        .then(function() { removeEmail(id); done++; actioned++; if (done === total) { txt('st-act', actioned); toast('Archived ' + done + ' emails', 'success'); selected = {}; refreshBadges(); renderTab(); } })
+        .catch(function() { done++; if (done === total) { txt('st-act', actioned); refreshBadges(); renderTab(); } });
     });
-    html += `</div></div>`;
   }
 
-  document.getElementById('tab-content').innerHTML = html;
-}
+  function removeEmail(id) {
+    results.flagged = results.flagged.filter(function(e) { return e.id !== id; });
+    results.archive = results.archive.filter(function(e) { return e.id !== id; });
+    results.all     = results.all.filter(function(e) { return e.id !== id; });
+    delete expanded[id]; delete composers[id]; delete selected[id];
+  }
 
-// Utils
-function toast(msg,type='info'){const s=document.getElementById('tstack');const el=document.createElement('div');el.className='toast '+type;el.textContent=msg;s.appendChild(el);setTimeout(()=>el.remove(),3200);}
-function avatarIni(from){const n=sndrName(from);const p=n.split(' ').filter(Boolean);return p.length>=2?(p[0][0]+p[1][0]).toUpperCase():n.slice(0,2).toUpperCase();}
-function sndrName(from){const m=from.match(/^"?([^"<]+)"?\s*</);return m?m[1].trim():from.replace(/<.*>/,'').trim()||from;}
-function exEmail(from){const m=from.match(/<([^>]+)>/);return m?m[1]:from;}
-function fmtD(s){if(!s)return'';try{const d=new Date(s),now=new Date(),diff=now-d;if(diff<86400000)return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});if(diff<604800000)return d.toLocaleDateString([],{weekday:'short'});return d.toLocaleDateString([],{month:'short',day:'numeric'});}catch(e){return s.slice(0,10);}}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-// gv, sv, show, hide defined at top of script
+  function refreshBadges() {
+    upStats(results.all.length, results.flagged.length, results.archive.length);
+    txt('b-f', results.flagged.length);
+    txt('b-a', results.archive.length);
+  }
+
+  // ── Todos ────────────────────────────────────────────────
+  function loadTodos() {
+    try { todos = JSON.parse(localStorage.getItem('iz3_todos') || '[]'); } catch(e) { todos = []; }
+    upTodoBadge();
+  }
+
+  function saveTodos() {
+    try { localStorage.setItem('iz3_todos', JSON.stringify(todos)); } catch(e) {}
+    upTodoBadge();
+  }
+
+  function upTodoBadge() { txt('b-td', todos.filter(function(t) { return !t.done; }).length); }
+
+  function mkTodoId() { return 'td_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
+
+  function addTodo(text, emailId, emailSubject, emailFrom) {
+    todos.unshift({ id: mkTodoId(), text: text, emailId: emailId || null, emailSubject: emailSubject || null, emailFrom: emailFrom || null, done: false, createdAt: Date.now() });
+    saveTodos();
+  }
+
+  function completeTodosByEmail(emailId) {
+    todos.forEach(function(t) { if (t.emailId === emailId && !t.done) { t.done = true; t.completedAt = Date.now(); } });
+    saveTodos();
+  }
+
+  function suggestTodos(flaggedEmails) {
+    if (!flaggedEmails.length || !cfg.akey) return;
+    var emailData = flaggedEmails.map(function(e, i) {
+      return '[' + i + '] FROM: ' + e.from + '\nSUBJECT: ' + e.subject + '\nSUMMARY: ' + (e.triageSummary || e.snippet) + '\nURGENCY: ' + (e.urgency || 'medium');
+    }).join('\n\n');
+    claudeAPI([{ role: 'user', content: 'Extract concrete action items from these flagged emails. Only suggest todos where a specific action is clearly needed. Return ONLY valid JSON:\n{"todos":[{"emailIndex":0,"action":"specific action","priority":"high|medium|low"}]}\n\nEMAILS:\n' + emailData }], null, 800)
+      .then(function(data) {
+        var raw = (data.content && data.content[0] && data.content[0].text || '{}').replace(/```json|```/g,'').trim();
+        var parsed; try { parsed = JSON.parse(raw); } catch(e) { parsed = { todos: [] }; }
+        pendingSuggestions = (parsed.todos || []).map(function(t) {
+          var email = flaggedEmails[t.emailIndex];
+          if (!email) return null;
+          return { id: mkTodoId(), action: t.action, email: email, priority: t.priority || 'medium', state: 'pending' };
+        }).filter(Boolean);
+        if (pendingSuggestions.length && activeTab === 'todos') renderTodos();
+        upTodoBadge();
+      })
+      .catch(function() {});
+  }
+
+  function renderTodos() {
+    var open = todos.filter(function(t) { return !t.done; });
+    var done = todos.filter(function(t) { return t.done; });
+    var hasPending = pendingSuggestions.some(function(s) { return s.state === 'pending'; });
+    var html = '';
+
+    // Suggestions banner
+    if (pendingSuggestions.length) {
+      html += '<div class="todo-suggest-banner">';
+      html +=   '<div class="todo-suggest-hdr"><div class="todo-suggest-dot"></div><div class="todo-suggest-title">Claude suggestions</div></div>';
+      html +=   '<div class="todo-suggest-sub">Review action items from your latest triage. Accept or decline each.</div>';
+      html +=   '<div class="todo-suggest-list">';
+      pendingSuggestions.forEach(function(s) {
+        var cls = s.state === 'declined' ? 'declined' : s.state === 'accepted' ? 'accepted' : '';
+        html += '<div class="todo-suggest-item ' + cls + '">';
+        html +=   '<div class="todo-suggest-body"><div class="todo-suggest-text">' + esc(s.action) + '</div><div class="todo-suggest-src">From: ' + esc(senderName(s.email.from)) + ' — ' + esc(s.email.subject) + '</div></div>';
+        if (s.state === 'pending') {
+          html += '<div class="todo-suggest-btns"><button class="btn btn-green btn-xs" id="accept-sug-' + s.id + '">Accept</button><button class="btn btn-red btn-xs" id="decline-sug-' + s.id + '">Decline</button></div>';
+        } else {
+          html += '<div style="font-size:13px;color:' + (s.state==='accepted'?'#27ae60':'#8a98b8') + ';padding:4px;">' + (s.state==='accepted'?'✓':'✕') + '</div>';
+        }
+        html += '</div>';
+      });
+      html +=   '</div>';
+      html +=   '<div class="todo-suggest-footer">';
+      if (hasPending) html += '<button class="btn btn-green btn-sm" id="btn-accept-all">Accept all</button><button class="btn btn-sm" id="btn-decline-all">Decline all</button>';
+      html += '<button class="btn btn-ghost btn-sm" id="btn-dismiss-sug">Dismiss</button></div>';
+      html += '</div>';
+    }
+
+    // Add input
+    html += '<div class="todo-add-row"><input type="text" class="todo-add-input" id="todo-add-inp" placeholder="Add a to-do manually…"><button class="btn btn-sm" id="btn-add-todo">Add</button></div>';
+
+    // Open todos
+    if (open.length) {
+      html += '<div class="todo-section" style="margin-top:14px;"><div class="todo-section-hdr"><span class="todo-section-title">Open (' + open.length + ')</span></div><div class="todo-list">';
+      open.forEach(function(t) {
+        var isEditing = editingTodoId === t.id;
+        html += '<div class="todo-item">';
+        html +=   '<input type="checkbox" class="todo-cb" id="tdcb-' + t.id + '">';
+        html +=   '<div class="todo-body">';
+        if (isEditing) {
+          html += '<input type="text" class="todo-text-edit" id="tdedit-' + t.id + '" value="' + esc(t.text) + '">';
+        } else {
+          html += '<div class="todo-text">' + esc(t.text) + '</div>';
+        }
+        if (t.emailSubject) html += '<div class="todo-meta"><span class="todo-source">Re: <button class="todo-source-link" id="tdlink-' + t.id + '">' + esc(t.emailSubject) + '</button></span></div>';
+        html +=   '</div>';
+        html +=   '<div class="todo-actions">';
+        if (!isEditing) html += '<button class="btn btn-ghost btn-icon btn-xs" id="tdedit-btn-' + t.id + '" style="font-size:15px;">✎</button>';
+        html +=     '<button class="btn btn-ghost btn-icon btn-xs" id="tddel-' + t.id + '" style="font-size:18px;color:#8a98b8;">×</button>';
+        html +=   '</div>';
+        html += '</div>';
+      });
+      html += '</div></div>';
+    } else if (!pendingSuggestions.length) {
+      html += '<div class="todo-empty"><div class="todo-empty-icon">✓</div>No open to-dos</div>';
+    }
+
+    // Done todos
+    if (done.length) {
+      html += '<div class="todo-section" style="margin-top:18px;"><div class="todo-section-hdr"><span class="todo-section-title">Completed (' + done.length + ')</span><button class="btn btn-ghost btn-xs" id="btn-clear-done">Clear all</button></div><div class="todo-list">';
+      done.slice(0,20).forEach(function(t) {
+        html += '<div class="todo-item done"><input type="checkbox" class="todo-cb" id="tdcb-' + t.id + '" checked><div class="todo-body"><div class="todo-text done-text">' + esc(t.text) + '</div></div><div class="todo-actions"><button class="btn btn-ghost btn-icon btn-xs" id="tddel-' + t.id + '" style="font-size:18px;color:#8a98b8;">×</button></div></div>';
+      });
+      html += '</div></div>';
+    }
+
+    el('tab-content').innerHTML = html;
+
+    // Wire todo events
+    pendingSuggestions.forEach(function(s) {
+      on('accept-sug-' + s.id, 'click', function() { s.state = 'accepted'; addTodo(s.action, s.email.id, s.email.subject, s.email.from); renderTodos(); });
+      on('decline-sug-' + s.id, 'click', function() { s.state = 'declined'; renderTodos(); });
+    });
+    on('btn-accept-all', 'click', function() { pendingSuggestions.forEach(function(s) { if (s.state==='pending') { s.state='accepted'; addTodo(s.action, s.email.id, s.email.subject, s.email.from); } }); renderTodos(); });
+    on('btn-decline-all', 'click', function() { pendingSuggestions.forEach(function(s) { if (s.state==='pending') s.state='declined'; }); renderTodos(); });
+    on('btn-dismiss-sug', 'click', function() { pendingSuggestions = []; renderTodos(); });
+    on('btn-add-todo', 'click', function() { var inp = el('todo-add-inp'); if (inp && inp.value.trim()) { addTodo(inp.value.trim()); inp.value=''; renderTodos(); } });
+    var addInp = el('todo-add-inp');
+    if (addInp) addInp.addEventListener('keydown', function(e) { if (e.key==='Enter') { if (addInp.value.trim()) { addTodo(addInp.value.trim()); addInp.value=''; renderTodos(); } } });
+    on('btn-clear-done', 'click', function() { todos = todos.filter(function(t) { return !t.done; }); saveTodos(); renderTodos(); });
+
+    todos.forEach(function(t) {
+      var cb = el('tdcb-' + t.id);
+      if (cb) cb.addEventListener('change', function() {
+        t.done = cb.checked; if (t.done) t.completedAt = Date.now(); else delete t.completedAt;
+        saveTodos(); renderTodos();
+      });
+      on('tddel-' + t.id, 'click', function() { todos = todos.filter(function(x) { return x.id !== t.id; }); saveTodos(); renderTodos(); });
+      on('tdedit-btn-' + t.id, 'click', function() { editingTodoId = t.id; renderTodos(); setTimeout(function() { var inp = el('tdedit-' + t.id); if (inp) inp.focus(); }, 50); });
+      on('tdedit-' + t.id, 'keydown', function(e) { if (e.key==='Enter') { var inp = el('tdedit-' + t.id); if (inp && inp.value.trim()) t.text = inp.value.trim(); editingTodoId = null; saveTodos(); renderTodos(); } if (e.key==='Escape') { editingTodoId = null; renderTodos(); } });
+      on('tdlink-' + t.id, 'click', function() {
+        if (!t.emailId) return;
+        var email = results.all.find(function(e) { return e.id === t.emailId; });
+        if (!email) { toast('Email not in current inbox view', 'info'); return; }
+        swTab('flagged'); expanded[t.emailId] = true;
+        setTimeout(function() { var ec = el('ec-' + t.emailId); if (ec) ec.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+      });
+    });
+  }
+
+  // ── Chat ─────────────────────────────────────────────────
+  function toggleChat() {
+    chatOpen = !chatOpen;
+    var panel = el('chat-panel');
+    if (panel) panel.classList.toggle('open', chatOpen);
+    if (chatOpen) setTimeout(function() { var cta = el('cta'); if (cta) cta.focus(); }, 280);
+  }
+
+  function clearChat() {
+    chatHistory = [];
+    setHTML('cmsgs', '<div class="cmsg assistant"><div class="cbubble">Chat cleared. How can I help?</div></div>');
+  }
+
+  function upChatCtx() {
+    if (results.all.length) {
+      txt('cctx-lbl', results.all.length + ' emails — ' + results.flagged.length + ' flagged, ' + results.archive.length + ' to archive');
+    } else {
+      txt('cctx-lbl', 'No inbox loaded yet');
+    }
+  }
+
+  function buildCtx() {
+    if (!results.all.length) return 'No inbox loaded.';
+    var fl = results.flagged.map(function(e) { return '- [' + (e.urgency||'') + '] ' + e.from + ' | ' + e.subject + ' | ' + (e.triageSummary||e.snippet); }).join('\n');
+    var ar = results.archive.slice(0,10).map(function(e) { return '- ' + e.from + ' | ' + e.subject; }).join('\n');
+    return 'Inbox (' + results.all.length + ' emails):\n\nFLAGGED (' + results.flagged.length + '):\n' + (fl||'None') + '\n\nARCHIVE (' + results.archive.length + '):\n' + (ar||'None');
+  }
+
+  function appendChatMsg(role, text, thinking) {
+    var msgs = el('cmsgs');
+    if (!msgs) return;
+    var d = document.createElement('div');
+    d.className = 'cmsg ' + role;
+    d.innerHTML = '<div class="cbubble' + (thinking ? ' thinking' : '') + '">' + esc(text) + '</div>';
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function updateLastMsg(text) {
+    var msgs = el('cmsgs');
+    if (!msgs) return;
+    var last = msgs.querySelector('.cmsg.assistant:last-child .cbubble');
+    if (last) { last.classList.remove('thinking'); last.textContent = text; }
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function sendChat() {
+    if (chatBusy) return;
+    var cta = el('cta');
+    if (!cta) return;
+    var text = cta.value.trim();
+    if (!text) return;
+    if (!cfg.akey) { appendChatMsg('assistant', 'No API key — go to Settings.'); return; }
+    cta.value = ''; cta.style.height = 'auto';
+    appendChatMsg('user', text);
+    chatHistory.push({ role: 'user', content: text });
+    chatBusy = true;
+    var sendBtn = el('btn-chat-send');
+    if (sendBtn) sendBtn.disabled = true;
+    appendChatMsg('assistant', 'Thinking…', true);
+    var sys = 'You are Claude, an AI assistant inside Inbox Zero, a Gmail triage tool. Be concise and direct.\n\n' + buildCtx();
+    claudeAPI(chatHistory, sys, 1000)
+      .then(function(data) {
+        if (data.error) throw new Error(data.error.message || 'API error');
+        var reply = (data.content && data.content[0] && data.content[0].text) || 'Sorry, no response.';
+        chatHistory.push({ role: 'assistant', content: reply });
+        updateLastMsg(reply);
+      })
+      .catch(function(e) { updateLastMsg('Error: ' + e.message); chatHistory.pop(); })
+      .then(function() { chatBusy = false; if (sendBtn) sendBtn.disabled = false; });
+  }
+
+  // ── Utilities ────────────────────────────────────────────
+  function avatarIni(from) {
+    var name = senderName(from);
+    var parts = name.split(' ').filter(Boolean);
+    return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.slice(0,2).toUpperCase();
+  }
+
+  function senderName(from) {
+    var m = from.match(/^"?([^"<]+)"?\s*</);
+    return m ? m[1].trim() : from.replace(/<.*>/,'').trim() || from;
+  }
+
+  function extractEmail(from) {
+    var m = from.match(/<([^>]+)>/);
+    return m ? m[1] : from;
+  }
+
+  function fmtDate(s) {
+    if (!s) return '';
+    try {
+      var d = new Date(s), now = new Date(), diff = now - d;
+      if (diff < 86400000) return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      if (diff < 604800000) return d.toLocaleDateString([],{weekday:'short'});
+      return d.toLocaleDateString([],{month:'short',day:'numeric'});
+    } catch(e) { return s.slice(0,10); }
+  }
+
+  // ── Init ─────────────────────────────────────────────────
+  function init() {
+    // Set greeting
+    var h = new Date().getHours();
+    txt('greeting-title', h < 12 ? 'Good morning 👋' : h < 17 ? 'Good afternoon 👋' : 'Good evening 👋');
+
+    // Load saved state
+    loadTodos();
+    var hasSaved = loadSaved();
+    if (hasSaved) { hide('setup-view'); show('main-view'); }
+
+    renderNav();
+
+    // Wire all static buttons
+    on('btn-launch', 'click', launch);
+    on('btn-triage', 'click', runTriage);
+    on('chat-fab',   'click', toggleChat);
+    on('btn-chat-send',  'click', sendChat);
+    on('btn-chat-close', 'click', toggleChat);
+    on('btn-chat-clear', 'click', clearChat);
+
+    // Tabs
+    ['flagged','archive','all','todos'].forEach(function(tab) {
+      on('tab-' + tab, 'click', function() { swTab(tab); });
+    });
+
+    // Chat textarea — Enter to send
+    var cta = el('cta');
+    if (cta) {
+      cta.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+      });
+      cta.addEventListener('input', function() {
+        cta.style.height = 'auto';
+        cta.style.height = Math.min(cta.scrollHeight, 120) + 'px';
+      });
+    }
+  }
+
+  // Run on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  return { launch: launch, runTriage: runTriage, toggleChat: toggleChat };
+
+})();
 </script>
 </body>
 </html>
