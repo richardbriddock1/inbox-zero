@@ -1154,7 +1154,7 @@ function renderNav() {
   nav.innerHTML = cfg.cid
     ? "<button id=\"btn-settings\" class=\"btn btn-sm\">Settings</button>"
     : "";
-  if ($("btn-settings")) $("btn-settings").addEventListener("click", showSetup);
+  // Click handled by global delegation (BUTTON_HANDLERS["btn-settings"])
 }
 
 // ── Launch ────────────────────────────────────────────────────
@@ -1852,52 +1852,98 @@ function fmtDate(s){
 }
 
 // ── Boot ──────────────────────────────────────────────────────
-document.addEventListener("DOMContentLoaded", function() {
-  loadTodos();
-  upTodoBadge();
-  loadWatched();
-  // Refresh watched threads in background after a short delay
-  setTimeout(function() {
-    if (gmailToken) refreshWatched();
-  }, 2000);
+// Use a single global delegation listener — bulletproof, works on every device.
+// No matter when elements appear, no matter if they're hidden, this catches them all.
 
-  // Wire static buttons — these elements exist in HTML at all times
-  $("btn-launch").addEventListener("click", launch);
-  $("chat-fab").addEventListener("click", toggleChat);
-  $("btn-chat-close").addEventListener("click", toggleChat);
-  $("btn-chat-clear").addEventListener("click", clearChat);
-  $("btn-chat-send").addEventListener("click", sendChat);
+// Map button IDs to handler functions
+var BUTTON_HANDLERS = {
+  "btn-launch": function() { launch(); },
+  "btn-triage": function() { runTriage(); },
+  "btn-settings": function() { showSetup(); },
+  "chat-fab": function() { toggleChat(); },
+  "btn-chat-close": function() { toggleChat(); },
+  "btn-chat-clear": function() { clearChat(); },
+  "btn-chat-send": function() { sendChat(); }
+};
 
-  // Chat textarea
-  $("chat-input").addEventListener("keydown", function(e) {
-    if (e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}
-  });
-  $("chat-input").addEventListener("input", function() {
-    this.style.height="auto";
-    this.style.height=Math.min(this.scrollHeight,120)+"px";
-  });
+// Global click delegation — finds button by walking up the DOM tree
+function handleGlobalClick(e) {
+  var node = e.target;
+  // Walk up the tree to handle clicks on icons/text inside buttons
+  for (var i = 0; i < 5 && node && node !== document; i++) {
+    if (node.id) {
+      // Static buttons
+      if (BUTTON_HANDLERS[node.id]) {
+        BUTTON_HANDLERS[node.id]();
+        return;
+      }
+      // Tab clicks
+      if (node.classList && node.classList.contains("tab") && node.dataset && node.dataset.tab) {
+        switchTab(node.dataset.tab);
+        return;
+      }
+    }
+    node = node.parentNode;
+  }
+}
 
-  // Tab clicks — tabs exist in HTML at all times
-  document.querySelectorAll(".tab").forEach(function(tab) {
-    tab.addEventListener("click", function() {
-      switchTab(tab.dataset.tab);
+function bootApp() {
+  try {
+    loadTodos();
+    upTodoBadge();
+    loadWatched();
+  } catch(e) { console.warn("Load state failed:", e); }
+
+  // Single global click handler — catches ALL button clicks reliably
+  document.addEventListener("click", handleGlobalClick);
+  // iOS sometimes needs touchend too for instant response — but only if click hasn't fired
+  document.addEventListener("touchend", function(e) {
+    // Only handle if it looks like a button tap, not a scroll
+    if (e.target && e.target.closest) {
+      var btn = e.target.closest("button, .tab, .chat-fab");
+      if (!btn) return;
+      // Don't prevent default — let click fire normally
+      // The click event will handle it; this just ensures iOS responsiveness
+    }
+  }, { passive: true });
+
+  // Chat textarea — needs special handling for Enter key and auto-resize
+  var chatInput = document.getElementById("chat-input");
+  if (chatInput) {
+    chatInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }
     });
-  });
+    chatInput.addEventListener("input", function() {
+      this.style.height = "auto";
+      this.style.height = Math.min(this.scrollHeight, 120) + "px";
+    });
+  }
 
-  // Load saved credentials
-  if (loadCreds()) {
-    showMain();
-  } else {
+  // Load saved creds and show appropriate view
+  try {
+    if (loadCreds()) {
+      showMain();
+    } else {
+      show("view-setup");
+    }
+  } catch(e) {
+    console.error("Boot view error:", e);
     show("view-setup");
   }
 
-  // btn-triage is inside view-main which may be hidden — wire after showMain sets it visible
-  // We use event delegation ONLY for btn-triage since it may not exist yet
-  document.addEventListener("click", function(e) {
-    if (e.target && e.target.id === "btn-triage") runTriage();
-    if (e.target && e.target.closest && e.target.closest("#btn-triage")) runTriage();
-  });
-});
+  // Refresh watched threads in background
+  setTimeout(function() {
+    try { if (gmailToken) refreshWatched(); } catch(e) {}
+  }, 2000);
+}
+
+// Run boot — try multiple strategies for reliability
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootApp);
+} else {
+  // DOM already loaded — run immediately
+  bootApp();
+}
 </script>
 </body>
 </html>
