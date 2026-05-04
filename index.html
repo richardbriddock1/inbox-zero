@@ -12,10 +12,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after {
+  box-sizing: border-box; margin: 0; padding: 0;
+  /* Global iOS Safari tap fix — no sticky highlight, instant response */
+  -webkit-tap-highlight-color: transparent;
+}
 
 :root {
-  /* Deep navy-to-blue gradient — from the splash screen */
   --navy:        #0d2b6e;
   --blue-mid:    #1a4fba;
   --blue-bright: #2979d4;
@@ -25,7 +28,6 @@
   --blue-soft:   #e8f0fb;
   --blue-tint:   #ddeaf9;
 
-  /* Neutrals */
   --white:      #ffffff;
   --bg:         #f0f4fb;
   --bg-card:    #ffffff;
@@ -40,7 +42,6 @@
   --shadow-lg:  0 10px 40px rgba(13,43,110,0.2);
   --shadow-btn: 0 4px 16px rgba(13,43,110,0.28);
 
-  /* Status */
   --red:         #d63031; --red-dim: rgba(214,48,49,0.08);   --red-border: rgba(214,48,49,0.2);
   --amber:       #e67e22; --amber-dim: rgba(230,126,34,0.08); --amber-border: rgba(230,126,34,0.2);
   --green:       #27ae60; --green-dim: rgba(39,174,96,0.08);  --green-border: rgba(39,174,96,0.2);
@@ -48,7 +49,6 @@
   --r:   14px; --rl: 22px; --rp: 100px;
   --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Mobile-first font scale (iPhone 16 Pro Max primary) */
   --fs-xs: 13px; --fs-sm: 15px; --fs-md: 16px;
   --fs-lg: 19px; --fs-xl: 27px; --fs-2xl: 34px;
   --touch: 50px; --gap: 16px;
@@ -72,6 +72,8 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
   color-scheme: light;
+  /* Prevent iOS rubber-band scroll from interfering with taps */
+  overscroll-behavior: none;
 }
 
 .shell {
@@ -112,11 +114,23 @@ html, body {
   border-radius: var(--rp);
   border: 1.5px solid var(--border-md);
   background: var(--white); color: var(--text-2);
-  cursor: pointer; transition: all 0.18s ease; white-space: nowrap;
-  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  cursor: pointer;
+  white-space: nowrap;
+  /* iOS Safari: critical for instant touch response */
+  touch-action: manipulation;
+  -webkit-appearance: none;
+  appearance: none;
+  /* Transition only on desktop to avoid iOS hover state sticking */
   box-shadow: var(--shadow-sm);
+  /* Prevent text selection on tap-hold */
+  -webkit-user-select: none;
+  user-select: none;
 }
-.btn:hover { border-color: var(--blue-mid); color: var(--navy); box-shadow: var(--shadow-md); }
+/* Only apply hover transitions on pointer devices (not touch) */
+@media (hover: hover) and (pointer: fine) {
+  .btn { transition: all 0.18s ease; }
+  .btn:hover { border-color: var(--blue-mid); color: var(--navy); box-shadow: var(--shadow-md); }
+}
 .btn:active { transform: scale(0.97); }
 
 .btn-primary {
@@ -124,23 +138,23 @@ html, body {
   border-color: transparent;
   box-shadow: var(--shadow-btn);
 }
-.btn-primary:hover { background: var(--blue-grad-h); color: #fff; box-shadow: var(--shadow-lg); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover { background: var(--blue-grad-h); color: #fff; box-shadow: var(--shadow-lg); }
+}
 
 .btn-sm  { font-size: var(--fs-xs); padding: 0 14px; height: calc(var(--touch) - 6px); }
 .btn-xs  { font-size: var(--fs-xs); padding: 0 12px; height: calc(var(--touch) - 10px); min-height: 34px; }
 .btn-full { width: 100%; }
 .btn-ghost { background: transparent; border-color: transparent; box-shadow: none; color: var(--text-3); }
-.btn-ghost:hover { background: var(--bg); border-color: var(--border-md); color: var(--text-2); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-ghost:hover { background: var(--bg); border-color: var(--border-md); color: var(--text-2); }
+}
 .btn-icon { padding: 0; width: var(--touch); height: var(--touch); border-radius: 50%; }
 
 .btn-red    { background: var(--red-dim);   border-color: var(--red-border);   color: var(--red);   box-shadow: none; }
-.btn-red:hover    { background: rgba(214,48,49,0.14); }
 .btn-amber  { background: var(--amber-dim); border-color: var(--amber-border); color: var(--amber); box-shadow: none; }
-.btn-amber:hover  { background: rgba(230,126,34,0.14); }
 .btn-blue   { background: var(--blue-soft); border-color: var(--border-md);    color: var(--navy);  box-shadow: none; }
-.btn-blue:hover   { background: var(--blue-tint); }
 .btn-green  { background: var(--green-dim); border-color: var(--green-border); color: var(--green); box-shadow: none; }
-.btn-green:hover  { background: rgba(39,174,96,0.14); }
 
 /* ── Setup ── */
 .setup-wrap { max-width: 460px; margin: 1rem auto 2rem; }
@@ -155,12 +169,12 @@ html, body {
 .setup-hero::before {
   content: ''; position: absolute; top: -50px; right: -50px;
   width: 180px; height: 180px; border-radius: 50%;
-  background: rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.07); pointer-events: none;
 }
 .setup-hero::after {
   content: ''; position: absolute; bottom: -40px; left: -25px;
   width: 130px; height: 130px; border-radius: 50%;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.05); pointer-events: none;
 }
 .eyebrow {
   font-size: var(--fs-xs); font-weight: 600;
@@ -194,11 +208,14 @@ html, body {
   color: var(--text-2); margin-bottom: 6px;
 }
 .field input {
-  width: 100%; padding: 13px 16px; font-size: 16px; font-family: var(--font);
+  width: 100%; padding: 13px 16px;
+  /* 16px prevents iOS auto-zoom on focus */
+  font-size: 16px; font-family: var(--font);
   border: 1.5px solid var(--border-md); border-radius: var(--r);
   background: var(--bg-input); color: var(--text);
   transition: border-color 0.18s, box-shadow 0.18s;
   -webkit-appearance: none; appearance: none;
+  touch-action: manipulation;
 }
 .field input::placeholder { color: var(--text-3); }
 .field input:focus {
@@ -214,7 +231,7 @@ html, body {
 }
 .notice svg { flex-shrink: 0; margin-top: 2px; color: var(--blue-mid); }
 
-/* ── Main header / greeting ── */
+/* ── Main header ── */
 .main-hdr { margin-bottom: 20px; }
 .greeting-bar {
   background: var(--blue-grad);
@@ -226,12 +243,12 @@ html, body {
 .greeting-bar::before {
   content: ''; position: absolute; top: -35px; right: -35px;
   width: 140px; height: 140px; border-radius: 50%;
-  background: rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.07); pointer-events: none;
 }
 .greeting-bar::after {
   content: ''; position: absolute; bottom: -25px; left: -15px;
   width: 100px; height: 100px; border-radius: 50%;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.04); pointer-events: none;
 }
 .greeting-title {
   font-size: var(--fs-xl); font-weight: 700; color: #fff;
@@ -254,6 +271,7 @@ html, body {
   background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%230d2b6e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 14px center;
   box-shadow: var(--shadow-sm);
+  touch-action: manipulation;
 }
 .tf-sel:focus { outline: none; border-color: var(--blue-mid); box-shadow: 0 0 0 3px rgba(26,79,186,0.1); }
 
@@ -268,9 +286,11 @@ html, body {
   background: var(--bg-card); border-radius: var(--rl);
   padding: 16px 18px; box-shadow: var(--shadow-sm);
   border: 1.5px solid var(--border);
-  transition: box-shadow 0.18s, transform 0.18s;
 }
-.stat:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+@media (hover: hover) and (pointer: fine) {
+  .stat { transition: box-shadow 0.18s, transform 0.18s; }
+  .stat:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+}
 .stat-lbl {
   font-size: var(--fs-xs); font-weight: 700;
   letter-spacing: 0.07em; text-transform: uppercase;
@@ -282,30 +302,43 @@ html, body {
 .stat-val.green { color: var(--green); }
 .stat-val.blue  { color: var(--navy); }
 
-/* ── Tabs ── */
+/* ── Tabs — converted to <button> elements ── */
 .tabs {
   display: flex; border-bottom: 2px solid var(--border);
   margin-bottom: 16px; overflow-x: auto;
   -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  gap: 0;
 }
 .tabs::-webkit-scrollbar { display: none; }
 
+/* tab is now a <button> — reset all button defaults first */
 .tab {
+  /* Reset button defaults */
+  border: none; background: none; outline: none;
+  font-family: var(--font);
+  /* Tab styles */
   font-size: var(--fs-sm); font-weight: 600;
   padding: 0 18px; height: 46px;
   cursor: pointer; color: var(--text-3);
   border-bottom: 3px solid transparent; margin-bottom: -2px;
-  transition: color 0.18s; white-space: nowrap; flex-shrink: 0;
+  white-space: nowrap; flex-shrink: 0;
   display: flex; align-items: center;
-  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
 }
-.tab:hover { color: var(--blue-mid); }
+@media (hover: hover) and (pointer: fine) {
+  .tab { transition: color 0.18s; }
+  .tab:hover { color: var(--blue-mid); }
+}
 .tab.active { color: var(--navy); border-bottom-color: var(--navy); }
 
 .tbadge {
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 700;
   padding: 2px 7px; border-radius: 20px; margin-left: 6px; line-height: 1.4;
+  /* Badge should not capture taps — parent button handles it */
+  pointer-events: none;
 }
 .tbadge.red   { background: var(--red-dim);   color: var(--red); }
 .tbadge.amber { background: var(--amber-dim); color: var(--amber); }
@@ -317,22 +350,32 @@ html, body {
 .ecard {
   background: var(--bg-card); border-radius: var(--rl);
   border: 1.5px solid var(--border); box-shadow: var(--shadow-sm);
-  overflow: hidden; transition: box-shadow 0.18s, transform 0.15s;
+  overflow: hidden;
 }
-.ecard:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+@media (hover: hover) and (pointer: fine) {
+  .ecard { transition: box-shadow 0.18s, transform 0.15s; }
+  .ecard:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+}
 .ecard.flagged { border-left: 3px solid var(--red); }
 .ecard.archv   { border-left: 3px solid var(--amber); }
 
 .erow {
   display: flex; align-items: flex-start; gap: 12px;
   padding: 14px 16px; cursor: pointer;
-  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  touch-action: manipulation;
+  /* Minimum tap target height for iOS HIG compliance */
+  min-height: var(--touch);
+  -webkit-user-select: none;
+  user-select: none;
 }
-.erow:hover { background: rgba(13,43,110,0.02); }
+@media (hover: hover) and (pointer: fine) {
+  .erow:hover { background: rgba(13,43,110,0.02); }
+}
 
 .ecb {
   margin-top: 3px; width: 18px; height: 18px;
   flex-shrink: 0; accent-color: var(--navy); cursor: pointer;
+  touch-action: manipulation;
 }
 .eavatar {
   width: 36px; height: 36px; border-radius: 50%;
@@ -341,8 +384,9 @@ html, body {
   font-size: 12px; font-weight: 700; color: white;
   flex-shrink: 0; margin-top: 1px;
   box-shadow: 0 2px 8px rgba(13,43,110,0.22);
+  pointer-events: none;
 }
-.emeta { flex: 1; min-width: 0; }
+.emeta { flex: 1; min-width: 0; pointer-events: none; }
 .etop  { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
 .efrom {
   font-size: var(--fs-md); font-weight: 700; color: var(--text);
@@ -402,6 +446,7 @@ html, body {
   flex: 1; padding: 12px 16px; font-size: 16px; font-family: var(--font);
   border: 1.5px solid var(--border-md); border-radius: var(--rp);
   background: var(--white); color: var(--text); -webkit-appearance: none;
+  touch-action: manipulation;
 }
 .cinstr input::placeholder { color: var(--text-3); }
 .cinstr input:focus { outline: none; border-color: var(--blue-mid); box-shadow: 0 0 0 3px rgba(26,79,186,0.1); }
@@ -423,7 +468,7 @@ html, body {
   margin-bottom: 10px; font-size: var(--fs-sm); color: var(--text-2);
   box-shadow: var(--shadow-sm); min-height: var(--touch);
 }
-.bulk-bar label { cursor: pointer; user-select: none; font-weight: 500; }
+.bulk-bar label { cursor: pointer; user-select: none; font-weight: 500; touch-action: manipulation; }
 
 /* ── Loading / empty / error ── */
 .loading-wrap {
@@ -446,7 +491,7 @@ html, body {
   color: var(--red); font-size: var(--fs-sm); margin-top: 8px; font-weight: 500;
 }
 
-/* ── Briefing card — navy gradient ── */
+/* ── Briefing card ── */
 .briefing-card {
   background: var(--blue-grad);
   border-radius: var(--rl); padding: 22px 24px;
@@ -457,12 +502,12 @@ html, body {
 .briefing-card::before {
   content: ''; position: absolute; top: -40px; right: -40px;
   width: 150px; height: 150px; border-radius: 50%;
-  background: rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.07); pointer-events: none;
 }
 .briefing-card::after {
   content: ''; position: absolute; bottom: -25px; left: -15px;
   width: 100px; height: 100px; border-radius: 50%;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.04); pointer-events: none;
 }
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(-8px); }
@@ -477,6 +522,7 @@ html, body {
   width: 8px; height: 8px; border-radius: 50%;
   background: rgba(255,255,255,0.85);
   animation: pulse 2s ease-in-out infinite;
+  pointer-events: none;
 }
 @keyframes pulse {
   0%, 100% { opacity: 0.55; transform: scale(1); }
@@ -490,12 +536,14 @@ html, body {
 .briefing-dismiss {
   background: rgba(255,255,255,0.15); border: none; cursor: pointer;
   color: white; font-size: 18px; border-radius: 50%;
-  font-family: var(--font); width: 32px; height: 32px;
+  font-family: var(--font); width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
   position: relative; z-index: 1;
-  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  touch-action: manipulation;
 }
-.briefing-dismiss:hover { background: rgba(255,255,255,0.25); }
+@media (hover: hover) and (pointer: fine) {
+  .briefing-dismiss:hover { background: rgba(255,255,255,0.25); }
+}
 .briefing-text {
   font-size: var(--fs-md); color: rgba(255,255,255,0.9);
   line-height: 1.75; position: relative; z-index: 1;
@@ -528,12 +576,15 @@ html, body {
   display: flex; align-items: flex-start; gap: 12px;
   padding: 14px 16px; background: var(--bg-card);
   border: 1.5px solid var(--border); border-radius: var(--r);
-  box-shadow: var(--shadow-sm); transition: box-shadow 0.16s;
+  box-shadow: var(--shadow-sm);
   min-height: var(--touch);
 }
-.todo-item:hover { box-shadow: var(--shadow-md); }
+@media (hover: hover) and (pointer: fine) {
+  .todo-item { transition: box-shadow 0.16s; }
+  .todo-item:hover { box-shadow: var(--shadow-md); }
+}
 .todo-item.done { opacity: 0.5; }
-.todo-cb { width: 20px; height: 20px; border-radius: 5px; accent-color: var(--navy); cursor: pointer; margin-top: 1px; flex-shrink: 0; }
+.todo-cb { width: 20px; height: 20px; border-radius: 5px; accent-color: var(--navy); cursor: pointer; margin-top: 1px; flex-shrink: 0; touch-action: manipulation; }
 .todo-body { flex: 1; min-width: 0; }
 .todo-text { font-size: var(--fs-md); color: var(--text); line-height: 1.5; font-weight: 500; }
 .todo-text.done-text { text-decoration: line-through; color: var(--text-3); }
@@ -548,9 +599,11 @@ html, body {
 .todo-source-link {
   color: var(--navy); text-decoration: none; cursor: pointer;
   background: none; border: none; font-size: var(--fs-xs); font-family: var(--font);
-  padding: 0; font-weight: 600; -webkit-tap-highlight-color: transparent;
+  padding: 0; font-weight: 600; touch-action: manipulation;
 }
-.todo-source-link:hover { text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) {
+  .todo-source-link:hover { text-decoration: underline; }
+}
 .todo-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; margin-left: auto; }
 .todo-suggest-banner {
   background: var(--bg-card); border: 1.5px solid var(--amber-border);
@@ -564,7 +617,7 @@ html, body {
 .todo-suggest-item {
   display: flex; align-items: flex-start; gap: 10px;
   padding: 12px 14px; background: var(--bg);
-  border: 1.5px solid var(--border); border-radius: var(--r); transition: opacity 0.2s;
+  border: 1.5px solid var(--border); border-radius: var(--r);
 }
 @media (max-width: 480px) {
   .todo-suggest-item { flex-direction: column; gap: 10px; }
@@ -588,7 +641,7 @@ html, body {
   flex: 1; padding: 12px 18px; font-size: 16px; font-family: var(--font);
   border: 1.5px solid var(--border-md); border-radius: var(--rp);
   background: var(--white); color: var(--text); -webkit-appearance: none;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sm); touch-action: manipulation;
 }
 .todo-add-input::placeholder { color: var(--text-3); }
 .todo-add-input:focus { outline: none; border-color: var(--blue-mid); box-shadow: 0 0 0 3px rgba(26,79,186,0.1); }
@@ -601,21 +654,32 @@ html, body {
   background: var(--blue-grad); border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   box-shadow: var(--shadow-btn);
-  z-index: 100; transition: transform 0.18s, box-shadow 0.18s;
-  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  z-index: 100;
+  touch-action: manipulation;
+  -webkit-appearance: none;
 }
-.chat-fab:hover { transform: scale(1.07); box-shadow: 0 12px 40px rgba(13,43,110,0.35); }
-.chat-fab svg { color: white; }
+@media (hover: hover) and (pointer: fine) {
+  .chat-fab { transition: transform 0.18s, box-shadow 0.18s; }
+  .chat-fab:hover { transform: scale(1.07); box-shadow: 0 12px 40px rgba(13,43,110,0.35); }
+}
+.chat-fab svg { color: white; pointer-events: none; }
 
 /* ── Chat panel ── */
 .chat-panel {
-  position: fixed; top: 0; right: 0; bottom: 0; width: 100%;
+  position: fixed; top: 0; right: 0; bottom: 0;
+  /* -webkit-fill-available is the correct iOS Safari viewport height fix */
+  width: 100%;
+  height: 100vh;
+  height: -webkit-fill-available;
+  height: 100dvh;
   background: var(--bg-card); display: flex; flex-direction: column;
   z-index: 200; transform: translateX(100%);
   transition: transform 0.26s cubic-bezier(0.4,0,0.2,1);
+  /* Prevent body scroll bleed-through on iOS */
+  overscroll-behavior: contain;
 }
 @media (min-width: 600px) {
-  .chat-panel { width: 400px; border-left: 1.5px solid var(--border); }
+  .chat-panel { width: 400px; border-left: 1.5px solid var(--border); height: 100vh; }
 }
 .chat-panel.open { transform: translateX(0); }
 
@@ -626,7 +690,7 @@ html, body {
   background: var(--blue-grad); flex-shrink: 0;
 }
 .cph-l { display: flex; align-items: center; gap: 10px; }
-.cph-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.85); box-shadow: 0 0 6px rgba(255,255,255,0.4); }
+.cph-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.85); box-shadow: 0 0 6px rgba(255,255,255,0.4); pointer-events: none; }
 .cph-name { font-size: var(--fs-lg); font-weight: 700; color: white; letter-spacing: -0.2px; }
 .cph-sub  { font-size: var(--fs-xs); color: rgba(255,255,255,0.7); margin-top: 1px; }
 .cph-r { display: flex; align-items: center; gap: 6px; }
@@ -641,6 +705,8 @@ html, body {
   flex: 1; overflow-y: auto; padding: 16px;
   display: flex; flex-direction: column; gap: 12px;
   background: var(--bg); -webkit-overflow-scrolling: touch;
+  /* Prevent iOS bounce from making content inaccessible */
+  overscroll-behavior: contain;
 }
 .cmsg { max-width: 88%; }
 .cmsg.user      { align-self: flex-end; }
@@ -671,7 +737,7 @@ html, body {
   border: 1.5px solid var(--border-md); border-radius: var(--rp);
   background: var(--bg-input); color: var(--text);
   resize: none; max-height: 120px; overflow-y: auto; line-height: 1.5;
-  -webkit-appearance: none;
+  -webkit-appearance: none; touch-action: manipulation;
 }
 .cta::placeholder { color: var(--text-3); }
 .cta:focus { outline: none; border-color: var(--blue-mid); box-shadow: 0 0 0 3px rgba(26,79,186,0.1); }
@@ -680,21 +746,21 @@ html, body {
   background: var(--blue-grad); border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; box-shadow: var(--shadow-sm);
-  transition: opacity 0.15s, transform 0.1s;
-  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  touch-action: manipulation; -webkit-appearance: none;
 }
-.csend:hover { opacity: 0.88; box-shadow: var(--shadow-md); }
 .csend:active { transform: scale(0.94); }
 .csend:disabled { opacity: 0.3; cursor: default; }
-.csend svg { color: white; }
+.csend svg { color: white; pointer-events: none; }
 .cclear {
   font-size: var(--fs-sm); color: rgba(255,255,255,0.75);
   background: rgba(255,255,255,0.15); border: none; cursor: pointer;
   font-family: var(--font); padding: 6px 12px; border-radius: var(--rp);
-  min-height: 34px; display: flex; align-items: center;
-  -webkit-tap-highlight-color: transparent;
+  min-height: 40px; display: flex; align-items: center;
+  touch-action: manipulation; -webkit-appearance: none;
 }
-.cclear:hover { background: rgba(255,255,255,0.25); color: white; }
+@media (hover: hover) and (pointer: fine) {
+  .cclear:hover { background: rgba(255,255,255,0.25); color: white; }
+}
 
 /* ── Toasts ── */
 .tstack {
@@ -715,7 +781,7 @@ html, body {
 .toast.info    { background: white; color: var(--navy);  border-color: var(--border-md); }
 @keyframes tIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 
-/* ── Force light inputs ── */
+/* ── Force light inputs on iOS ── */
 input:not([type=checkbox]):not([type=radio]), textarea, select {
   color-scheme: light;
   background-color: var(--bg-input) !important;
@@ -729,7 +795,6 @@ input:-webkit-autofill:focus {
   caret-color: var(--text);
 }
 
-
 /* ── Watched threads ── */
 .watch-section { margin-bottom: 20px; }
 .watch-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
@@ -739,12 +804,15 @@ input:-webkit-autofill:focus {
   background:var(--bg-card); border:1.5px solid var(--border);
   border-radius:var(--r); padding:13px 16px;
   display:flex; align-items:flex-start; gap:12px;
-  box-shadow:var(--shadow-sm); transition:box-shadow 0.16s;
+  box-shadow:var(--shadow-sm);
 }
-.watch-card:hover { box-shadow:var(--shadow-md); }
+@media (hover: hover) and (pointer: fine) {
+  .watch-card { transition: box-shadow 0.16s; }
+  .watch-card:hover { box-shadow:var(--shadow-md); }
+}
 .watch-card.has-unread { border-left:3px solid var(--blue-mid); }
 .watch-card.has-unread .watch-subject { color:var(--navy); font-weight:700; }
-.watch-avatar { width:32px; height:32px; border-radius:50%; background:var(--blue-grad); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:white; flex-shrink:0; }
+.watch-avatar { width:32px; height:32px; border-radius:50%; background:var(--blue-grad); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:white; flex-shrink:0; pointer-events:none; }
 .watch-meta { flex:1; min-width:0; }
 .watch-subject { font-size:var(--fs-sm); font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .watch-from { font-size:var(--fs-xs); color:var(--text-3); margin-top:2px; }
@@ -801,7 +869,7 @@ input:-webkit-autofill:focus {
         Stored in your browser only. Never sent anywhere except Google and Anthropic APIs.
       </div>
       <div style="margin-top:20px;">
-        <button id="btn-launch" class="btn btn-primary btn-full" style="height:56px;font-size:17px;">Get started →</button>
+        <button id="btn-launch" type="button" class="btn btn-primary btn-full" style="height:56px;font-size:17px;">Get started →</button>
       </div>
       <div id="setup-msg" style="margin-top:12px;"></div>
     </div>
@@ -820,8 +888,8 @@ input:-webkit-autofill:focus {
           <option value="3d">Last 3 days</option>
           <option value="7d">Last 7 days</option>
         </select>
-        <button id="btn-triage" class="btn btn-primary" style="flex:1;">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v3l2 2" stroke-linecap="round"/></svg>
+        <button id="btn-triage" type="button" class="btn btn-primary" style="flex:1;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="pointer-events:none;"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v3l2 2" stroke-linecap="round"/></svg>
           Triage inbox
         </button>
       </div>
@@ -833,7 +901,7 @@ input:-webkit-autofill:focus {
       <div class="stat"><div class="stat-lbl">Actioned</div><div class="stat-val green" id="s-act">0</div></div>
     </div>
     <div id="briefing-area"></div>
-    <!-- Watched Threads Panel (always visible on dashboard) -->
+
     <div id="watch-panel-wrap" style="display:none;margin-bottom:18px;">
       <div class="watch-section">
         <div class="watch-header">
@@ -844,28 +912,29 @@ input:-webkit-autofill:focus {
       </div>
     </div>
 
+    <!-- TABS: changed from <div> to <button type="button"> for iOS Safari compatibility -->
     <div class="tabs" id="tabs">
-      <div class="tab active" data-tab="flagged">Flagged <span class="tbadge red" id="b-flag">0</span></div>
-      <div class="tab" data-tab="archive">Archive <span class="tbadge amber" id="b-arch">0</span></div>
-      <div class="tab" data-tab="all">All emails</div>
-      <div class="tab" data-tab="todos">To-do <span class="tbadge green" id="b-todo">0</span></div>
-      <div class="tab" data-tab="calendar">Calendar</div>
+      <button type="button" class="tab active" data-tab="flagged">Flagged <span class="tbadge red" id="b-flag">0</span></button>
+      <button type="button" class="tab" data-tab="archive">Archive <span class="tbadge amber" id="b-arch">0</span></button>
+      <button type="button" class="tab" data-tab="all">All emails</button>
+      <button type="button" class="tab" data-tab="todos">To-do <span class="tbadge green" id="b-todo">0</span></button>
+      <button type="button" class="tab" data-tab="calendar">Calendar</button>
     </div>
     <div id="tab-body"><div class="empty-wrap"><div class="empty-icon">✉</div>Run triage to load your inbox</div></div>
   </div>
 </div>
 
-<button id="chat-fab" class="chat-fab" title="Ask Claude">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+<button id="chat-fab" type="button" class="chat-fab" title="Ask Claude">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 </button>
 
 <div id="chat-panel" class="chat-panel">
   <div class="cph">
     <div class="cph-l"><div class="cph-dot"></div><div><div class="cph-name">Ask Claude</div><div class="cph-sub">Inbox-aware AI</div></div></div>
     <div class="cph-r">
-      <button id="btn-chat-clear" class="cclear">Clear</button>
-      <button id="btn-chat-close" class="btn btn-ghost btn-icon btn-sm" style="color:white;">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
+      <button id="btn-chat-clear" type="button" class="cclear">Clear</button>
+      <button id="btn-chat-close" type="button" class="btn btn-ghost btn-icon btn-sm" style="color:white;">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="pointer-events:none;"><path d="M2 2l12 12M14 2L2 14"/></svg>
       </button>
     </div>
   </div>
@@ -875,8 +944,8 @@ input:-webkit-autofill:focus {
   </div>
   <div class="cinput-row">
     <textarea id="chat-input" class="cta" rows="1" placeholder="Ask anything…"></textarea>
-    <button id="btn-chat-send" class="csend">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    <button id="btn-chat-send" type="button" class="csend">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
     </button>
   </div>
 </div>
@@ -885,8 +954,15 @@ input:-webkit-autofill:focus {
 
 <script>
 // =============================================================
-// INBOX ZERO — Complete clean rewrite
-// Simple globals + direct addEventListener. No modules, no IIFE.
+// INBOX ZERO — iOS Safari-fixed rewrite
+// Key fixes vs original:
+//   1. Body touchstart listener (THE iOS Safari click-event fix)
+//   2. Tabs converted from <div> to <button> in HTML
+//   3. Static buttons wired directly, not just via delegation
+//   4. Removed broken/noisy touchend handler
+//   5. hover: CSS scoped to pointer:fine to prevent sticky states
+//   6. pointer-events:none on decorative children (SVGs, badges)
+//   7. chat panel height uses dvh + -webkit-fill-available
 // =============================================================
 
 // ── State ─────────────────────────────────────────────────────
@@ -903,9 +979,9 @@ var editingTodo = null;
 var chatHistory = [];
 var chatBusy = false;
 var calFetching = false;
-var watchedThreads = [];  // [{threadId, subject, from, snippet, addedAt, lastMsgCount, hasUnread}]
+var watchedThreads = [];
 var WATCH_KEY = "iz_watched";
-var followUpLabelId = null; // cached Gmail label ID for "Needs Follow Up"
+var followUpLabelId = null;
 
 // ── Credential persistence ────────────────────────────────────
 var CRED_KEYS = ["iz_creds", "iz3_cfg", "iz2_cfg", "iz_cfg"];
@@ -968,13 +1044,11 @@ function upWatchBadge() {
 // ── Follow Up label ───────────────────────────────────────────
 function ensureFollowUpLabel() {
   if (followUpLabelId) return Promise.resolve(followUpLabelId);
-  // Check if it already exists
   return gmailFetch("/labels")
     .then(function(d) {
       var labels = d.labels || [];
       var existing = labels.find(function(l){ return l.name === "Needs Follow Up"; });
       if (existing) { followUpLabelId = existing.id; return existing.id; }
-      // Create it
       return gmailFetch("/labels", {
         method: "POST",
         body: JSON.stringify({
@@ -1009,7 +1083,6 @@ function markFollowUp(msgId, em) {
 function watchThread(em) {
   var already = watchedThreads.find(function(w){ return w.threadId === em.threadId; });
   if (already) { toast("Already watching this thread", "info"); return; }
-  // Fetch current thread to get message count baseline
   gmailFetch("/threads/"+em.threadId+"?format=minimal")
     .then(function(d) {
       var msgs = d.messages || [];
@@ -1028,7 +1101,6 @@ function watchThread(em) {
       upWatchBadge();
       toast("Watching thread: "+em.subject, "success");
       renderTab();
-      // Refresh dashboard watch panel if visible
       if (activeTab === "flagged" || activeTab === "all") renderWatchPanel();
     })
     .catch(function(e) { toast("Watch failed: "+e.message, "error"); });
@@ -1070,32 +1142,32 @@ function renderWatchPanel() {
   var area = $("watch-panel");
   if (!area) return;
   if (!watchedThreads.length) {
-    area.innerHTML = "<div class="watch-empty">No watched threads yet. Open an email and click <strong>Watch thread</strong> to track it.</div>";
+    area.innerHTML = "<div class=\"watch-empty\">No watched threads yet. Open an email and click <strong>Watch thread</strong> to track it.</div>";
     return;
   }
-  var html = "<div class="watch-list">";
+  var html = "<div class=\"watch-list\">";
   watchedThreads.forEach(function(w) {
     var ini = avatarIni(w.from);
-    html += "<div class="watch-card "+(w.hasUnread?"has-unread":"")+"">"+
-      "<div class="watch-avatar">"+esc(ini)+"</div>"+
-      "<div class="watch-meta">"+
-        "<div class="watch-subject">"+esc(w.subject)+"</div>"+
-        "<div class="watch-from">"+esc(sndrName(w.from))+"</div>"+
-        "<div class="watch-status">"+
+    html += "<div class=\"watch-card "+(w.hasUnread?"has-unread":"")+"\">"+
+      "<div class=\"watch-avatar\">"+esc(ini)+"</div>"+
+      "<div class=\"watch-meta\">"+
+        "<div class=\"watch-subject\">"+esc(w.subject)+"</div>"+
+        "<div class=\"watch-from\">"+esc(sndrName(w.from))+"</div>"+
+        "<div class=\"watch-status\">"+
           (w.hasUnread
-            ? "<span class="watch-badge unread">🔵 New activity</span>"
-            : "<span class="watch-badge read">✓ Up to date</span>")+
-          "<span style="font-size:11px;color:var(--text-3);">"+w.msgCount+" message"+(w.msgCount!==1?"s":"")+"</span>"+
+            ? "<span class=\"watch-badge unread\">🔵 New activity</span>"
+            : "<span class=\"watch-badge read\">✓ Up to date</span>")+
+          "<span style=\"font-size:11px;color:var(--text-3);\">"+w.msgCount+" message"+(w.msgCount!==1?"s":"")+"</span>"+
         "</div>"+
-        "<div style="font-size:var(--fs-xs);color:var(--text-3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"+esc(w.snippet)+"</div>"+
+        "<div style=\"font-size:var(--fs-xs);color:var(--text-3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">"+esc(w.snippet)+"</div>"+
       "</div>"+
-      "<div class="watch-actions">"+
-        "<button class="btn btn-ghost btn-xs" id="unwatch-"+w.threadId+"" title="Stop watching">×</button>"+
+      "<div class=\"watch-actions\">"+
+        "<button type=\"button\" class=\"btn btn-ghost btn-xs\" id=\"unwatch-"+w.threadId+"\" title=\"Stop watching\">×</button>"+
       "</div>"+
     "</div>";
   });
   html += "</div>";
-  html += "<div style="text-align:right;margin-top:8px;"><button class="btn btn-sm" id="btn-refresh-watch">↻ Refresh</button></div>";
+  html += "<div style=\"text-align:right;margin-top:8px;\"><button type=\"button\" class=\"btn btn-sm\" id=\"btn-refresh-watch\">↻ Refresh</button></div>";
   area.innerHTML = html;
 
   watchedThreads.forEach(function(w) {
@@ -1152,9 +1224,11 @@ function renderNav() {
   var nav = $("nav-right");
   if (!nav) return;
   nav.innerHTML = cfg.cid
-    ? "<button id=\"btn-settings\" class=\"btn btn-sm\">Settings</button>"
+    ? "<button id=\"btn-settings\" type=\"button\" class=\"btn btn-sm\">Settings</button>"
     : "";
-  // Click handled by global delegation (BUTTON_HANDLERS["btn-settings"])
+  // Wire the dynamically-created settings button directly
+  var btnSettings = $("btn-settings");
+  if (btnSettings) btnSettings.addEventListener("click", function(){ showSetup(); });
 }
 
 // ── Launch ────────────────────────────────────────────────────
@@ -1289,7 +1363,6 @@ function doTriage(list) {
       upChatCtx();
       renderTab();
       if (flagged.length) suggestTodos(flagged);
-      // Refresh watched thread status now that token is fresh
       setTimeout(refreshWatched, 500);
     });
 }
@@ -1314,7 +1387,7 @@ function renderBriefing(text, raw) {
     "<div class=\"briefing-card\" id=\"bcard\">"+
       "<div class=\"briefing-header\">"+
         "<div class=\"briefing-label\"><div class=\"briefing-dot\"></div><span class=\"briefing-title\">Briefing</span></div>"+
-        "<button id=\"btn-dismiss-briefing\" class=\"briefing-dismiss\">×</button>"+
+        "<button type=\"button\" id=\"btn-dismiss-briefing\" class=\"briefing-dismiss\">×</button>"+
       "</div>"+
       "<div class=\"briefing-text\">"+esc(text)+"</div>"+
       "<div class=\"briefing-meta\">"+chips+"<span class=\"briefing-time\">"+now+"</span></div>"+
@@ -1336,7 +1409,7 @@ function switchTab(tab) {
 function renderTab() {
   if (activeTab === "todos")    { renderTodos(); return; }
   if (activeTab === "calendar") { renderCalendar(); return; }
-  // Show/hide watched threads panel
+
   var wp = $("watch-panel-wrap");
   if (wp) wp.style.display = watchedThreads.length ? "block" : "none";
   if (watchedThreads.length) renderWatchPanel();
@@ -1350,9 +1423,9 @@ function renderTab() {
   var html = "";
   if (list.length > 1) {
     html += "<div class=\"bulk-bar\"><input type=\"checkbox\" id=\"cb-all\" style=\"width:18px;height:18px;accent-color:#0d2b6e;cursor:pointer;\"> "+
-            "<label for=\"cb-all\" style=\"cursor:pointer;user-select:none;\">Select all "+list.length+"</label>"+
+            "<label for=\"cb-all\">Select all "+list.length+"</label>"+
             "<div style=\"flex:1\"></div>"+
-            "<button id=\"btn-archive-sel\" class=\"btn btn-red btn-sm\">Archive selected</button></div>";
+            "<button type=\"button\" id=\"btn-archive-sel\" class=\"btn btn-red btn-sm\">Archive selected</button></div>";
   }
   html += "<div style=\"display:flex;flex-direction:column;gap:8px;\">";
   list.forEach(function(em) {
@@ -1381,11 +1454,11 @@ function renderTab() {
       if (em.summary) html += "<div class=\"esummary\">"+esc(em.summary)+"</div>";
       if (em.fullBody) html += "<div class=\"efullbody\">"+esc(em.fullBody)+"</div>";
       html += "<div class=\"eactions\">";
-      if (activeTab!=="archive") html += "<button class=\"btn btn-blue btn-sm\" id=\"open-cmp-"+em.id+"\">Draft reply</button>";
-      html += "<button class=\"btn btn-red btn-sm\" id=\"arch-one-"+em.id+"\">Archive</button>";
-      html += "<button class=\"btn btn-amber btn-sm\" id=\"followup-"+em.id+"\">"+(em.followUp?"✓ Follow Up":"Follow Up")+"</button>";
-      html += "<button class=\"btn btn-sm\" id=\"watch-"+em.id+"\">👁 Watch</button>";
-      if (!em.fullBody) html += "<button class=\"btn btn-sm\" id=\"load-full-"+em.id+"\">Load full email</button>";
+      if (activeTab!=="archive") html += "<button type=\"button\" class=\"btn btn-blue btn-sm\" id=\"open-cmp-"+em.id+"\">Draft reply</button>";
+      html += "<button type=\"button\" class=\"btn btn-red btn-sm\" id=\"arch-one-"+em.id+"\">Archive</button>";
+      html += "<button type=\"button\" class=\"btn btn-amber btn-sm\" id=\"followup-"+em.id+"\">"+(em.followUp?"✓ Follow Up":"Follow Up")+"</button>";
+      html += "<button type=\"button\" class=\"btn btn-sm\" id=\"watch-"+em.id+"\">👁 Watch</button>";
+      if (!em.fullBody) html += "<button type=\"button\" class=\"btn btn-sm\" id=\"load-full-"+em.id+"\">Load full email</button>";
       if (em.followUp) html += "<span class=\"follow-badge\">📌 Needs Follow Up</span>";
       html += "</div></div>";
       if (composers[em.id]) {
@@ -1393,12 +1466,12 @@ function renderTab() {
           "<div class=\"clbl\">Reply to "+esc(sndrName(em.from))+"</div>"+
           "<div class=\"cinstr\">"+
             "<input type=\"text\" id=\"instr-"+em.id+"\" placeholder=\"Instructions: decline politely, ask for ETA…\">"+
-            "<button class=\"btn btn-blue btn-sm\" id=\"gen-"+em.id+"\">Generate</button>"+
+            "<button type=\"button\" class=\"btn btn-blue btn-sm\" id=\"gen-"+em.id+"\">Generate</button>"+
           "</div>"+
           "<textarea class=\"rta\" id=\"rta-"+em.id+"\" placeholder=\"Generated reply — edit before sending…\"></textarea>"+
           "<div class=\"cfooter\">"+
-            "<button class=\"btn btn-sm\" id=\"cancel-cmp-"+em.id+"\">Cancel</button>"+
-            "<button class=\"btn btn-green btn-sm\" id=\"send-"+em.id+"\">Send reply</button>"+
+            "<button type=\"button\" class=\"btn btn-sm\" id=\"cancel-cmp-"+em.id+"\">Cancel</button>"+
+            "<button type=\"button\" class=\"btn btn-green btn-sm\" id=\"send-"+em.id+"\">Send reply</button>"+
           "</div>"+
         "</div>";
       }
@@ -1565,19 +1638,19 @@ function renderTodos() {
         "<div class=\"todo-suggest-src\">"+esc(sndrName(s.email.from))+" — "+esc(s.email.subject)+"</div></div>";
       if (s.state==="pending") {
         html+="<div class=\"todo-suggest-btns\">"+
-          "<button class=\"btn btn-green btn-xs\" id=\"sug-acc-"+s.id+"\">Accept</button>"+
-          "<button class=\"btn btn-red btn-xs\" id=\"sug-dec-"+s.id+"\">Decline</button></div>";
+          "<button type=\"button\" class=\"btn btn-green btn-xs\" id=\"sug-acc-"+s.id+"\">Accept</button>"+
+          "<button type=\"button\" class=\"btn btn-red btn-xs\" id=\"sug-dec-"+s.id+"\">Decline</button></div>";
       } else {
         html+="<div style=\"font-size:14px;padding:4px;color:"+(s.state==="accepted"?"#27ae60":"#aaa")+";\">"+( s.state==="accepted"?"✓":"✕")+"</div>";
       }
       html+="</div>";
     });
     html+="</div><div class=\"todo-suggest-footer\">";
-    if (hasPending) html+="<button class=\"btn btn-green btn-sm\" id=\"sug-all-acc\">Accept all</button><button class=\"btn btn-sm\" id=\"sug-all-dec\">Decline all</button>";
-    html+="<button class=\"btn btn-ghost btn-sm\" id=\"sug-dismiss\">Dismiss</button></div></div>";
+    if (hasPending) html+="<button type=\"button\" class=\"btn btn-green btn-sm\" id=\"sug-all-acc\">Accept all</button><button type=\"button\" class=\"btn btn-sm\" id=\"sug-all-dec\">Decline all</button>";
+    html+="<button type=\"button\" class=\"btn btn-ghost btn-sm\" id=\"sug-dismiss\">Dismiss</button></div></div>";
   }
 
-  html+="<div class=\"todo-add-row\"><input type=\"text\" class=\"todo-add-input\" id=\"todo-inp\" placeholder=\"Add to-do manually…\"><button class=\"btn btn-sm\" id=\"todo-add\">Add</button></div>";
+  html+="<div class=\"todo-add-row\"><input type=\"text\" class=\"todo-add-input\" id=\"todo-inp\" placeholder=\"Add to-do manually…\"><button type=\"button\" class=\"btn btn-sm\" id=\"todo-add\">Add</button></div>";
 
   if (open.length) {
     html+="<div class=\"todo-section\" style=\"margin-top:14px;\"><div class=\"todo-section-hdr\"><span class=\"todo-section-title\">Open ("+open.length+")</span></div><div class=\"todo-list\">";
@@ -1586,10 +1659,10 @@ function renderTodos() {
       html+="<div class=\"todo-item\">"+
         "<input type=\"checkbox\" class=\"todo-cb\" id=\"tdcb-"+t.id+"\">"+
         "<div class=\"todo-body\">"+(isEd?"<input type=\"text\" class=\"todo-text-edit\" id=\"tdedit-"+t.id+"\" value=\""+esc(t.text)+"\">":"<div class=\"todo-text\">"+esc(t.text)+"</div>")+
-        (t.emailSubject?"<div class=\"todo-meta\"><span class=\"todo-source\">Re: <button class=\"todo-source-link\" id=\"tdlink-"+t.id+"\">"+esc(t.emailSubject)+"</button></span></div>":"")+
+        (t.emailSubject?"<div class=\"todo-meta\"><span class=\"todo-source\">Re: <button type=\"button\" class=\"todo-source-link\" id=\"tdlink-"+t.id+"\">"+esc(t.emailSubject)+"</button></span></div>":"")+
         "</div>"+
-        "<div class=\"todo-actions\">"+(isEd?"":"<button class=\"btn btn-ghost btn-icon btn-xs\" id=\"tded-"+t.id+"\" style=\"font-size:15px;\">✎</button>")+
-        "<button class=\"btn btn-ghost btn-icon btn-xs\" id=\"tddel-"+t.id+"\" style=\"font-size:18px;color:#aaa;\">×</button></div>"+
+        "<div class=\"todo-actions\">"+(isEd?"":"<button type=\"button\" class=\"btn btn-ghost btn-icon btn-xs\" id=\"tded-"+t.id+"\" style=\"font-size:15px;\">✎</button>")+
+        "<button type=\"button\" class=\"btn btn-ghost btn-icon btn-xs\" id=\"tddel-"+t.id+"\" style=\"font-size:18px;color:#aaa;\">×</button></div>"+
       "</div>";
     });
     html+="</div></div>";
@@ -1598,16 +1671,15 @@ function renderTodos() {
   }
 
   if (done.length) {
-    html+="<div class=\"todo-section\" style=\"margin-top:18px;\"><div class=\"todo-section-hdr\"><span class=\"todo-section-title\">Completed ("+done.length+")</span><button class=\"btn btn-ghost btn-xs\" id=\"clear-done\">Clear</button></div><div class=\"todo-list\">";
+    html+="<div class=\"todo-section\" style=\"margin-top:18px;\"><div class=\"todo-section-hdr\"><span class=\"todo-section-title\">Completed ("+done.length+")</span><button type=\"button\" class=\"btn btn-ghost btn-xs\" id=\"clear-done\">Clear</button></div><div class=\"todo-list\">";
     done.slice(0,20).forEach(function(t){
-      html+="<div class=\"todo-item done\"><input type=\"checkbox\" class=\"todo-cb\" id=\"tdcb-"+t.id+"\" checked><div class=\"todo-body\"><div class=\"todo-text done-text\">"+esc(t.text)+"</div></div><div class=\"todo-actions\"><button class=\"btn btn-ghost btn-icon btn-xs\" id=\"tddel-"+t.id+"\" style=\"font-size:18px;color:#aaa;\">×</button></div></div>";
+      html+="<div class=\"todo-item done\"><input type=\"checkbox\" class=\"todo-cb\" id=\"tdcb-"+t.id+"\" checked><div class=\"todo-body\"><div class=\"todo-text done-text\">"+esc(t.text)+"</div></div><div class=\"todo-actions\"><button type=\"button\" class=\"btn btn-ghost btn-icon btn-xs\" id=\"tddel-"+t.id+"\" style=\"font-size:18px;color:#aaa;\">×</button></div></div>";
     });
     html+="</div></div>";
   }
 
   setHTML("tab-body", html);
 
-  // Wire suggestion buttons
   pendingSuggestions.forEach(function(s){
     addClick("sug-acc-"+s.id, function(){s.state="accepted";addTodo(s.action,s.email.id,s.email.subject,s.email.from);renderTodos();});
     addClick("sug-dec-"+s.id, function(){s.state="declined";renderTodos();});
@@ -1686,7 +1758,7 @@ function doCalSummary(evs) {
     var ds=d?new Date(d.getFullYear(),d.getMonth(),d.getDate()):null;
     var label=ds?ds.getTime()===today.getTime()?"TODAY":ds.getTime()===tomorrow.getTime()?"TOMORROW":d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}):"?";
     var time=ev.start&&ev.start.date&&!ev.start.dateTime?"All day":(d?d.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}):"");
-    return "["+i+"] "+label+" | "+( ev.summary||"Untitled")+" | "+time+(ev.location?" | @"+ev.location:"")+(ev.attendees?" | "+ev.attendees.length+" attendees":"");
+    return "["+i+"] "+label+" | "+(ev.summary||"Untitled")+" | "+time+(ev.location?" | @"+ev.location:"")+(ev.attendees?" | "+ev.attendees.length+" attendees":"");
   }).join("\n");
 
   var prompt="You are a personal assistant. Today is "+todayStr+".\n\n"+
@@ -1723,7 +1795,6 @@ function drawCalendar(evs, summary) {
     }
   }
 
-  // Group by day
   var days={}, order=[];
   evs.forEach(function(ev){
     var s=ev.start&&(ev.start.dateTime||ev.start.date); if(!s) return;
@@ -1752,7 +1823,7 @@ function drawCalendar(evs, summary) {
       if (ev.location) meta.push("📍 "+ev.location);
       if (att>1) meta.push("👥 "+att);
       if (hasVideo) meta.push("📹 Video");
-      html+="<div class=\"ecard\" style=\""+( isToday?"border-left:3px solid var(--blue-mid);":"")+"\">"+
+      html+="<div class=\"ecard\" style=\""+(isToday?"border-left:3px solid var(--blue-mid);":"")+"\">"+
         "<div class=\"erow\" style=\"cursor:default;\">"+
         "<div style=\"min-width:56px;flex-shrink:0;\">"+
           (allDay?"<div style=\"font-size:11px;font-weight:700;color:var(--blue-mid);\">All day</div>":
@@ -1767,7 +1838,7 @@ function drawCalendar(evs, summary) {
     html+="</div></div>";
   });
 
-  html+="<div style=\"text-align:center;padding:1rem;\"><button id=\"cal-refresh\" class=\"btn btn-sm\">↻ Refresh</button></div>";
+  html+="<div style=\"text-align:center;padding:1rem;\"><button type=\"button\" id=\"cal-refresh\" class=\"btn btn-sm\">↻ Refresh</button></div>";
   setHTML("tab-body", html);
   addClick("cal-refresh", function(){calFetching=false;renderCalendar();});
 }
@@ -1777,7 +1848,12 @@ function toggleChat() {
   var panel=$("chat-panel");
   if (!panel) return;
   panel.classList.toggle("open");
-  if (panel.classList.contains("open")) setTimeout(function(){var i=$("chat-input");if(i)i.focus();},280);
+  if (panel.classList.contains("open")) {
+    setTimeout(function(){
+      var i=$("chat-input");
+      if(i) i.focus();
+    }, 280);
+  }
 }
 
 function clearChat() {
@@ -1852,62 +1928,50 @@ function fmtDate(s){
 }
 
 // ── Boot ──────────────────────────────────────────────────────
-// Use a single global delegation listener — bulletproof, works on every device.
-// No matter when elements appear, no matter if they're hidden, this catches them all.
-
-// Map button IDs to handler functions
-var BUTTON_HANDLERS = {
-  "btn-launch": function() { launch(); },
-  "btn-triage": function() { runTriage(); },
-  "btn-settings": function() { showSetup(); },
-  "chat-fab": function() { toggleChat(); },
-  "btn-chat-close": function() { toggleChat(); },
-  "btn-chat-clear": function() { clearChat(); },
-  "btn-chat-send": function() { sendChat(); }
-};
-
-// Global click delegation — finds button by walking up the DOM tree
-function handleGlobalClick(e) {
-  var node = e.target;
-  // Walk up the tree to handle clicks on icons/text inside buttons
-  for (var i = 0; i < 5 && node && node !== document; i++) {
-    if (node.id) {
-      // Static buttons
-      if (BUTTON_HANDLERS[node.id]) {
-        BUTTON_HANDLERS[node.id]();
-        return;
-      }
-      // Tab clicks
-      if (node.classList && node.classList.contains("tab") && node.dataset && node.dataset.tab) {
-        switchTab(node.dataset.tab);
-        return;
-      }
-    }
-    node = node.parentNode;
-  }
-}
-
 function bootApp() {
+  // ── FIX #1: THE iOS Safari click event fix ────────────────────
+  // iOS Safari does not fire click events that bubble to the document
+  // unless the body itself has a touchstart listener. This single line
+  // makes every element on the page interactive for click delegation.
+  document.body.addEventListener("touchstart", function(){}, {passive: true});
+
+  // Load persisted state
   try {
     loadTodos();
     upTodoBadge();
     loadWatched();
   } catch(e) { console.warn("Load state failed:", e); }
 
-  // Single global click handler — catches ALL button clicks reliably
-  document.addEventListener("click", handleGlobalClick);
-  // iOS sometimes needs touchend too for instant response — but only if click hasn't fired
-  document.addEventListener("touchend", function(e) {
-    // Only handle if it looks like a button tap, not a scroll
-    if (e.target && e.target.closest) {
-      var btn = e.target.closest("button, .tab, .chat-fab");
-      if (!btn) return;
-      // Don't prevent default — let click fire normally
-      // The click event will handle it; this just ensures iOS responsiveness
-    }
-  }, { passive: true });
+  // ── FIX #2: Wire static buttons DIRECTLY (belt + suspenders) ──
+  // In addition to delegation, we wire known static buttons right on
+  // the element. This guarantees they work even if delegation fails.
+  var staticWires = {
+    "btn-launch":    function(){ launch(); },
+    "btn-triage":    function(){ runTriage(); },
+    "chat-fab":      function(){ toggleChat(); },
+    "btn-chat-close":function(){ toggleChat(); },
+    "btn-chat-clear":function(){ clearChat(); },
+    "btn-chat-send": function(){ sendChat(); }
+  };
+  Object.keys(staticWires).forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", staticWires[id]);
+  });
 
-  // Chat textarea — needs special handling for Enter key and auto-resize
+  // ── FIX #3: Wire tab buttons directly ─────────────────────────
+  // Tabs are now <button> elements in HTML (already interactive),
+  // but we wire them directly for maximum reliability.
+  document.querySelectorAll(".tab[data-tab]").forEach(function(tab){
+    tab.addEventListener("click", function(){
+      switchTab(tab.dataset.tab);
+    });
+  });
+
+  // ── FIX #4: NO touchend handler ───────────────────────────────
+  // The original had a passive touchend listener that did nothing
+  // except add noise. Removed entirely.
+
+  // Chat textarea — Enter key and auto-resize
   var chatInput = document.getElementById("chat-input");
   if (chatInput) {
     chatInput.addEventListener("keydown", function(e) {
@@ -1919,7 +1983,7 @@ function bootApp() {
     });
   }
 
-  // Load saved creds and show appropriate view
+  // Load saved credentials and show appropriate view
   try {
     if (loadCreds()) {
       showMain();
@@ -1931,17 +1995,16 @@ function bootApp() {
     show("view-setup");
   }
 
-  // Refresh watched threads in background
+  // Refresh watched threads in background after token available
   setTimeout(function() {
     try { if (gmailToken) refreshWatched(); } catch(e) {}
   }, 2000);
 }
 
-// Run boot — try multiple strategies for reliability
+// Boot — handle both cases: DOM not yet ready, and DOM already loaded
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", bootApp);
 } else {
-  // DOM already loaded — run immediately
   bootApp();
 }
 </script>
