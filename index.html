@@ -1112,151 +1112,284 @@ var App = (function() {
 
   // ── Calendar ─────────────────────────────────────────────
   var calendarData = [];
+  var calendarFetching = false;
 
   function runCalendar() {
-    swTab('calendar');
-    setHTML('tab-content', '<div class="loading-wrap"><div class="spinner"></div>Fetching calendar events…</div>');
-    // Fetch next 7 days of calendar events via Google Calendar API
-    var now = new Date();
-    var weekOut = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    var timeMin = now.toISOString();
-    var timeMax = weekOut.toISOString();
-    var calUrl = 'https://www.googleapis.com/calendar/v3/calendars/primary/events' +
-      '?timeMin=' + encodeURIComponent(timeMin) +
-      '&timeMax=' + encodeURIComponent(timeMax) +
-      '&singleEvents=true&orderBy=startTime&maxResults=50';
+    // Guard against recursive calls from swTab
+    if (calendarFetching) return;
+    calendarFetching = true;
+    setHTML('tab-content', '<div class="loading-wrap"><div class="spinner"></div>Fetching your calendar…</div>');
 
-    var doFetch = function() {
+    // Start of current day (midnight local)
+    var now = new Date();
+    var dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    // 8 days out to capture full week
+    var weekEnd = new Date(dayStart.getTime() + 8 * 24 * 60 * 60 * 1000);
+
+    var calUrl = 'https://www.googleapis.com/calendar/v3/calendars/primary/events' +
+      '?timeMin=' + encodeURIComponent(dayStart.toISOString()) +
+      '&timeMax=' + encodeURIComponent(weekEnd.toISOString()) +
+      '&singleEvents=true' +
+      '&orderBy=startTime' +
+      '&maxResults=100' +
+      '&showDeleted=false';
+
+    var doCalFetch = function() {
       return fetch(calUrl, {
-        headers: { Authorization: 'Bearer ' + gmailToken }
-      }).then(function(r) { return r.json(); });
+        headers: { Authorization: 'Bearer ' + gmailToken, Accept: 'application/json' }
+      }).then(function(r) {
+        if (!r.ok) return r.json().then(function(e) { throw new Error((e.error && e.error.message) || 'Calendar API returned ' + r.status); });
+        return r.json();
+      });
     };
 
-    var p = gmailToken ? doFetch() : getToken().then(doFetch);
-    p.then(function(data) {
-      if (data.error) throw new Error(data.error.message || 'Calendar API error');
-      calendarData = (data.items || []).filter(function(ev) {
-        return ev.status !== 'cancelled';
+    // Always get a fresh token first — the current gmailToken may have expired
+    getToken()
+      .then(doCalFetch)
+      .then(function(data) {
+        if (data.error) throw new Error(data.error.message || 'Calendar API error');
+        calendarData = (data.items || []).filter(function(ev) {
+          return ev.status !== 'cancelled' && (ev.summary || ev.description);
+        });
+
+        if (!calendarData.length) {
+          calendarFetching = false;
+          setHTML('tab-content',
+            '<div class="empty-wrap"><div class="empty-icon">📅</div>' +
+            '<div style="font-size:var(--fs-lg);font-weight:600;color:var(--text);margin-bottom:8px;">No events this week</div>' +
+            '<div style="color:var(--text-3);">Your calendar is clear for the next 7 days.</div></div>');
+          return;
+        }
+
+        setHTML('tab-content', '<div class="loading-wrap"><div class="spinner"></div>Summarizing ' + calendarData.length + ' events with Claude…</div>');
+        return claudeCalendarSummary(calendarData);
+      })
+      .catch(function(e) {
+        calendarFetching = false;
+        var msg = e.message || 'Unknown error';
+        // Helpful message for scope issues
+        if (msg.indexOf('403') > -1 || msg.indexOf('insufficientPermissions') > -1 || msg.indexOf('Calendar API returned 403') > -1) {
+          msg = 'Calendar access denied. Your refresh token may not include calendar.readonly scope. Go to Settings and update your refresh token — see setup instructions for how to add the calendar scope in OAuth Playground.';
+        }
+        setHTML('tab-content', '<div class="err-banner" style="margin:1rem;line-height:1.6;">' + esc(msg) + '</div>');
       });
-      if (!calendarData.length) {
-        setHTML('tab-content', '<div class="empty-wrap"><div class="empty-icon">📅</div>No upcoming events this week.</div>');
-        return;
-      }
-      setHTML('tab-content', '<div class="loading-wrap"><div class="spinner"></div>Summarizing with Claude AI…</div>');
-      return claudeCalendarSummary(calendarData);
-    })
-    .catch(function(e) {
-      setHTML('tab-content', '<div class="err-banner" style="margin:1rem;">Calendar error: ' + esc(e.message) + '</div>');
-    });
   }
 
   function claudeCalendarSummary(events) {
-    var today = new Date();
-    today.setHours(0,0,0,0);
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     var tomorrow = new Date(today.getTime() + 86400000);
 
-    var eventText = events.map(function(ev, i) {
-      var start = ev.start && (ev.start.dateTime || ev.start.date);
-      var end   = ev.end   && (ev.end.dateTime   || ev.end.date);
-      var d = start ? new Date(start) : null;
-      var dayLabel = '';
-      if (d) {
-        var ds = new Date(d); ds.setHours(0,0,0,0);
+    // Build a clear text description of each event
+    var eventLines = events.map(function(ev, i) {
+      var startRaw = ev.start && (ev.start.dateTime || ev.start.date);
+      var endRaw   = ev.end   && (ev.end.dateTime   || ev.end.date);
+      var isAllDay = !!(ev.start && ev.start.date && !ev.start.dateTime);
+      var d = startRaw ? new Date(startRaw) : null;
+      var ds = d ? new Date(d.getFullYear(), d.getMonth(), d.getDate()) : null;
+
+      var dayLabel = 'Unknown date';
+      if (ds) {
         if (ds.getTime() === today.getTime()) dayLabel = 'TODAY';
         else if (ds.getTime() === tomorrow.getTime()) dayLabel = 'TOMORROW';
-        else dayLabel = d.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'});
+        else dayLabel = d.toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'});
       }
-      return '[' + i + '] ' + dayLabel + ' | ' + (ev.summary || 'Untitled') +
-        ' | ' + (start ? new Date(start).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : 'All day') +
-        (ev.location ? ' | @ ' + ev.location : '') +
-        (ev.attendees ? ' | ' + ev.attendees.length + ' attendees' : '');
-    }).join('\n');
 
-    var prompt = 'You are a personal assistant. Summarize these calendar events for the next 7 days into two sections:\n\n' +
-      '1. TODAY section: A warm, specific briefing of today\'s events in 2-4 sentences. Mention times, meetings, and anything to prepare for.\n' +
-      '2. THIS WEEK section: A brief day-by-day rundown of the rest of the week\'s key events. Keep it scannable.\n\n' +
-      'Return ONLY valid JSON: {"today_briefing":"paragraph about today","week_summary":[{"day":"Monday May 5","events":"brief description"}],"total_events":0,"has_today":true}\n\nEVENTS:\n' + eventText;
+      var timeLabel = isAllDay ? 'All day' : (d ? d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : '');
+      if (!isAllDay && endRaw) timeLabel += ' - ' + new Date(endRaw).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
 
-    return claudeAPI([{ role: 'user', content: prompt }], null, 1000)
+      var parts = [
+        '[' + i + '] ' + dayLabel,
+        ev.summary || 'Untitled event',
+        timeLabel,
+        ev.location ? 'Location: ' + ev.location : '',
+        ev.attendees && ev.attendees.length > 1 ? ev.attendees.length + ' attendees' : '',
+        ev.hangoutLink ? 'Has video call link' : ''
+      ].filter(Boolean);
+
+      return parts.join(' | ');
+    });
+
+    var todayCount = events.filter(function(ev) {
+      var d = ev.start && (ev.start.dateTime || ev.start.date);
+      if (!d) return false;
+      var ds = new Date(new Date(d).getFullYear(), new Date(d).getMonth(), new Date(d).getDate());
+      return ds.getTime() === today.getTime();
+    }).length;
+
+    var todayDateStr = today.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+
+    var prompt = 'You are a personal chief of staff. Here are calendar events for the next 7 days. Write a helpful daily briefing.
+
+' +
+      'Today is ' + todayDateStr + '. There are ' + todayCount + ' events today and ' + events.length + ' total this week.
+
+' +
+      'Return ONLY valid JSON with NO markdown:
+' +
+      '{
+' +
+      '  "today_briefing": "2-4 warm, specific sentences about today's schedule. Mention meeting names and times. If no events today say the calendar is clear.",
+' +
+      '  "week_overview": "2-3 sentences summarizing the week ahead — key meetings, busy days, anything notable.",
+' +
+      '  "days": [{"label":"Today — Monday May 4","events":[{"time":"9:00 AM","title":"Team Standup","location":"","has_video":true,"duration":"30 min"}]}]
+' +
+      '}
+
+' +
+      'EVENTS:
+' + eventLines.join('
+');
+
+    return claudeAPI([{ role: 'user', content: prompt }], null, 1500)
       .then(function(data) {
-        var raw = (data.content && data.content[0] && data.content[0].text || '{}').replace(/```json|```/g,'').trim();
-        var parsed; try { parsed = JSON.parse(raw); } catch(e) { parsed = null; }
+        calendarFetching = false;
+        var raw = (data.content && data.content[0] && data.content[0].text || '{}')
+          .replace(/```json/g,'').replace(/```/g,'').trim();
+        var parsed;
+        try { parsed = JSON.parse(raw); } catch(e) { parsed = null; }
         renderCalendar(events, parsed);
+      })
+      .catch(function(e) {
+        calendarFetching = false;
+        // Still render events even if Claude summarization fails
+        renderCalendar(events, null);
       });
   }
 
   function renderCalendar(events, summary) {
-    var today = new Date(); today.setHours(0,0,0,0);
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     var tomorrow = new Date(today.getTime() + 86400000);
-
-    var todayEvents = events.filter(function(ev) {
-      var d = ev.start && (ev.start.dateTime || ev.start.date);
-      if (!d) return false;
-      var ds = new Date(d); ds.setHours(0,0,0,0);
-      return ds.getTime() === today.getTime();
-    });
 
     var html = '';
 
-    // AI Today briefing card
-    if (summary && summary.today_briefing) {
-      html += '<div class="briefing-card" style="margin-bottom:16px;">';
-      html +=   '<div class="briefing-header"><div class="briefing-label"><div class="briefing-dot"></div><span class="briefing-title">Today\'s briefing</span></div></div>';
-      html +=   '<div class="briefing-text">' + esc(summary.today_briefing) + '</div>';
-      if (todayEvents.length) {
-        html += '<div class="briefing-meta"><span class="briefing-chip">📅 ' + todayEvents.length + ' event' + (todayEvents.length!==1?'s':'') + ' today</span><span class="briefing-time">' + new Date().toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'}) + '</span></div>';
+    // ── AI Briefing cards ──────────────────────────────────
+    if (summary) {
+      // Today card
+      if (summary.today_briefing) {
+        var todayEvents = events.filter(function(ev) {
+          var d = ev.start && (ev.start.dateTime || ev.start.date);
+          if (!d) return false;
+          var ds = new Date(d); ds = new Date(ds.getFullYear(), ds.getMonth(), ds.getDate());
+          return ds.getTime() === today.getTime();
+        });
+        html += '<div class="briefing-card" style="margin-bottom:12px;">';
+        html +=   '<div class="briefing-header"><div class="briefing-label"><div class="briefing-dot"></div>' +
+                  '<span class="briefing-title">Today — ' + today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}) + '</span></div></div>';
+        html +=   '<div class="briefing-text">' + esc(summary.today_briefing) + '</div>';
+        if (todayEvents.length) {
+          html += '<div class="briefing-meta"><span class="briefing-chip">📅 ' + todayEvents.length + ' event' + (todayEvents.length!==1?'s':'') + '</span>' +
+                  '<span class="briefing-time">' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + '</span></div>';
+        }
+        html += '</div>';
       }
-      html += '</div>';
+      // Week overview card
+      if (summary.week_overview) {
+        html += '<div class="card" style="margin-bottom:12px;border-left:3px solid var(--blue-mid);">';
+        html +=   '<div class="card-label" style="margin-bottom:8px;">Week ahead</div>';
+        html +=   '<div style="font-size:var(--fs-sm);color:var(--text-2);line-height:1.65;">' + esc(summary.week_overview) + '</div>';
+        html += '</div>';
+      }
     }
 
-    // Group events by day
+    // ── Group events by day ────────────────────────────────
     var days = {};
     var dayOrder = [];
     events.forEach(function(ev) {
       var start = ev.start && (ev.start.dateTime || ev.start.date);
       if (!start) return;
-      var d = new Date(start); d.setHours(0,0,0,0);
-      var key = d.getTime();
+      var d = new Date(start);
+      var key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
       if (!days[key]) { days[key] = []; dayOrder.push(key); }
       days[key].push(ev);
     });
 
     dayOrder.forEach(function(key) {
-      var d = new Date(key);
-      var isToday = key === today.getTime();
+      var dayDate = new Date(key);
+      var isToday    = key === today.getTime();
       var isTomorrow = key === tomorrow.getTime();
-      var dayLabel = isToday ? 'Today' : isTomorrow ? 'Tomorrow' : d.toLocaleDateString([],{weekday:'long',month:'short',day:'numeric'});
+      var dayLabel = isToday ? 'Today'
+        : isTomorrow ? 'Tomorrow'
+        : dayDate.toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'});
 
-      html += '<div class="todo-section">';
-      html +=   '<div class="todo-section-hdr"><span class="todo-section-title" style="color:' + (isToday?'var(--navy)':'var(--text-3)') + ';' + (isToday?'font-size:14px;':'') + '">' + esc(dayLabel) + '</span></div>';
-      html +=   '<div class="todo-list">';
+      html += '<div style="margin-bottom:18px;">';
+      html +=   '<div style="font-size:var(--fs-xs);font-weight:700;letter-spacing:0.07em;text-transform:uppercase;' +
+                'color:' + (isToday ? 'var(--navy)' : 'var(--text-3)') + ';margin-bottom:8px;' +
+                (isToday ? 'font-size:13px;' : '') + '">' + esc(dayLabel) + '</div>';
+      html +=   '<div style="display:flex;flex-direction:column;gap:7px;">';
+
       days[key].forEach(function(ev) {
-        var start = ev.start && (ev.start.dateTime || ev.start.date);
-        var end   = ev.end   && (ev.end.dateTime   || ev.end.date);
+        var startRaw = ev.start && (ev.start.dateTime || ev.start.date);
+        var endRaw   = ev.end   && (ev.end.dateTime   || ev.end.date);
         var isAllDay = !!(ev.start && ev.start.date && !ev.start.dateTime);
-        var timeStr = isAllDay ? 'All day' : (start ? new Date(start).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '');
-        if (!isAllDay && end) timeStr += ' – ' + new Date(end).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-        var attendeeCount = ev.attendees ? ev.attendees.length : 0;
-        var hasVideo = ev.hangoutLink || (ev.description && ev.description.indexOf('meet.google') > -1);
+        var startD = startRaw ? new Date(startRaw) : null;
+        var endD   = endRaw   ? new Date(endRaw)   : null;
 
-        html += '<div class="ecard" style="margin-bottom:0;">';
-        html +=   '<div class="erow" style="cursor:default;">';
-        html +=     '<div class="eavatar" style="background:' + (isToday ? 'var(--blue-grad)' : 'linear-gradient(135deg,#8a98b8,#b0bccc)') + ';">' +
-                      (isAllDay ? '📅' : '🕐') + '</div>';
-        html +=     '<div class="emeta">';
-        html +=       '<div class="etop"><span class="efrom">' + esc(ev.summary || 'Untitled') + '</span><span class="edate">' + esc(timeStr) + '</span></div>';
-        if (ev.location) html += '<div class="esnip">📍 ' + esc(ev.location) + '</div>';
-        if (attendeeCount > 1) html += '<div class="esnip">👥 ' + attendeeCount + ' attendees</div>';
-        if (hasVideo) html += '<div style="margin-top:6px;"><span class="etag" style="background:rgba(13,43,110,0.07);color:var(--navy);border:1.5px solid var(--border-md);">📹 Video call</span></div>';
-        html +=     '</div>';
+        var timeStr = isAllDay ? 'All day'
+          : startD ? startD.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : '';
+        if (!isAllDay && endD) {
+          // Calculate duration
+          var durMs = endD - startD;
+          var durMins = Math.round(durMs / 60000);
+          var durStr = durMins < 60 ? durMins + ' min'
+            : durMins === 60 ? '1 hr'
+            : (durMins / 60).toFixed(1).replace(/\.0$/,'') + ' hrs';
+          timeStr += ' · ' + durStr;
+        }
+
+        var hasVideo = !!(ev.hangoutLink || (ev.conferenceData) ||
+          (ev.description && (ev.description.indexOf('meet.google') > -1 || ev.description.indexOf('zoom.us') > -1)));
+        var attendeeCount = ev.attendees ? ev.attendees.filter(function(a) { return a.responseStatus !== 'declined'; }).length : 0;
+
+        html += '<div class="ecard" style="' + (isToday ? 'border-left:3px solid var(--blue-mid);' : '') + '">';
+        html +=   '<div class="erow" style="cursor:default;padding:13px 15px;">';
+        // Time column
+        html +=   '<div style="min-width:52px;flex-shrink:0;">';
+        if (isAllDay) {
+          html += '<div style="font-size:11px;font-weight:600;color:var(--blue-mid);text-transform:uppercase;">All day</div>';
+        } else if (startD) {
+          html += '<div style="font-size:var(--fs-sm);font-weight:700;color:' + (isToday ? 'var(--navy)' : 'var(--text-2)') + ';">' +
+                  startD.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + '</div>';
+          if (endD) html += '<div style="font-size:11px;color:var(--text-3);">' + endD.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + '</div>';
+        }
+        html +=   '</div>';
+        // Divider dot
+        html +=   '<div style="width:8px;height:8px;border-radius:50%;background:' +
+                  (isToday ? 'var(--blue-mid)' : 'var(--border-md)') +
+                  ';flex-shrink:0;margin-top:5px;"></div>';
+        // Content
+        html +=   '<div style="flex:1;min-width:0;">';
+        html +=     '<div style="font-size:var(--fs-md);font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px;">' + esc(ev.summary || 'Untitled') + '</div>';
+        var meta = [];
+        if (ev.location) meta.push('📍 ' + ev.location);
+        if (attendeeCount > 1) meta.push('👥 ' + attendeeCount + ' people');
+        if (hasVideo) meta.push('📹 Video call');
+        if (meta.length) html += '<div style="font-size:var(--fs-xs);color:var(--text-3);line-height:1.6;">' + esc(meta.join('  ·  ')) + '</div>';
+        html +=   '</div>';
         html +=   '</div>';
         html += '</div>';
       });
-      html +=   '</div>';
+
+      html += '  </div>';
       html += '</div>';
     });
 
+    // Refresh button at bottom
+    html += '<div style="text-align:center;padding:1rem 0;">' +
+            '<button id="btn-cal-refresh" class="btn btn-sm">↻ Refresh calendar</button></div>';
+
     el('tab-content').innerHTML = html;
+
+    // Wire refresh button
+    var refreshBtn = document.getElementById('btn-cal-refresh');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', function() {
+        calendarFetching = false;
+        runCalendar();
+      });
+    }
   }
 
   // ── Briefing card ────────────────────────────────────────
@@ -1293,12 +1426,12 @@ var App = (function() {
       var e = el('tab-' + t);
       if (e) e.classList.toggle('active', t === tab);
     });
-    if (tab === 'calendar') { runCalendar(); return; }
     renderTab();
   }
 
   function renderTab() {
     if (activeTab === 'todos') { renderTodos(); return; }
+    if (activeTab === 'calendar') { calendarFetching = false; runCalendar(); return; }
     var list = results[activeTab] || [];
     if (!list.length) {
       setHTML('tab-content', '<div class="empty-wrap"><div class="empty-icon">' + (results.all.length ? '✓' : '✉') + '</div>' + (results.all.length ? 'Nothing here.' : 'Run triage to load your inbox.') + '</div>');
@@ -1760,7 +1893,7 @@ var App = (function() {
         if (bid === 'tab-archive')  { e.preventDefault(); swTab('archive');  return; }
         if (bid === 'tab-all')      { e.preventDefault(); swTab('all');      return; }
         if (bid === 'tab-todos')    { e.preventDefault(); swTab('todos');    return; }
-        if (bid === 'tab-calendar') { e.preventDefault(); swTab('calendar'); return; }
+        if (bid === 'tab-calendar') { e.preventDefault(); swTab('calendar'); renderTab(); return; }
         btn = btn.parentElement;
       }
     }, true); // useCapture=true so it fires even on non-interactive elements
