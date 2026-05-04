@@ -912,23 +912,43 @@ var App = (function() {
 
   // ── Credentials & setup ──────────────────────────────────
   function loadSaved() {
-    try {
-      var s = localStorage.getItem('iz_creds');
-      if (!s) return false;
-      var saved = JSON.parse(s);
-      if (!saved || !saved.cid || !saved.akey) return false;
-      cfg = saved;
-      setVal('s-cid', cfg.cid);
-      setVal('s-csec', cfg.csec);
-      setVal('s-rtok', cfg.rtok);
-      setVal('s-akey', cfg.akey);
-      setVal('s-priority', cfg.priority || '@csdecatur.net');
-      return true;
-    } catch(e) { return false; }
+    // Try every known key in every storage type — whichever has valid creds wins
+    var keys = ['iz_creds', 'iz3_cfg', 'iz2_cfg', 'iz_cfg'];
+    var storages = [];
+    try { storages.push(localStorage); } catch(e) {}
+    try { storages.push(sessionStorage); } catch(e) {}
+
+    for (var si = 0; si < storages.length; si++) {
+      for (var ki = 0; ki < keys.length; ki++) {
+        try {
+          var s = storages[si].getItem(keys[ki]);
+          if (!s) continue;
+          var saved = JSON.parse(s);
+          if (!saved || !saved.cid || !saved.akey) continue;
+          // Found valid creds — load them and re-save to all keys
+          cfg = saved;
+          setVal('s-cid', cfg.cid);
+          setVal('s-csec', cfg.csec);
+          setVal('s-rtok', cfg.rtok);
+          setVal('s-akey', cfg.akey);
+          setVal('s-priority', cfg.priority || '@csdecatur.net');
+          // Re-save to all keys/storages to ensure persistence going forward
+          saveCreds();
+          return true;
+        } catch(e) {}
+      }
+    }
+    return false;
   }
 
   function saveCreds() {
-    try { localStorage.setItem('iz_creds', JSON.stringify(cfg)); } catch(e) {}
+    var data = JSON.stringify(cfg);
+    // Write to multiple keys so any code version finds them
+    var keys = ['iz_creds', 'iz3_cfg', 'iz2_cfg'];
+    keys.forEach(function(k) {
+      try { localStorage.setItem(k, data); } catch(e) {}
+      try { sessionStorage.setItem(k, data); } catch(e) {}
+    });
   }
 
   function launch() {
@@ -959,7 +979,12 @@ var App = (function() {
     setVal('s-priority', cfg.priority);
     setHTML('setup-err', '<div style="font-size:13px;color:#8a98b8;margin-top:8px;">Credentials saved. <button id="btn-clear-creds" style="background:none;border:none;color:#d63031;cursor:pointer;font-size:13px;text-decoration:underline;padding:0;">Clear</button></div>');
     on('btn-clear-creds', 'click', function() {
-      try { localStorage.removeItem('iz3_cfg'); } catch(e) {}
+      try { 
+        // Clear all known credential keys
+        ['iz_creds','iz3_cfg','iz2_cfg','iz_cfg'].forEach(function(k) { 
+          try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch(x) {} 
+        });
+      } catch(e) {}
       cfg = {};
       toast('Credentials cleared', 'info');
     });
@@ -970,7 +995,7 @@ var App = (function() {
     if (!nav) return;
     if (cfg.cid) {
       nav.innerHTML = '<button id="btn-settings" class="btn btn-sm">Settings</button>';
-      on('btn-settings', 'click', goSettings);
+      wireBtn('btn-settings', goSettings);
     } else {
       nav.innerHTML = '';
     }
@@ -1864,6 +1889,27 @@ var App = (function() {
   }
 
   // ── Init ─────────────────────────────────────────────────
+  function wireBtn(id, fn) {
+    // Attach both click and touchend for maximum iOS/desktop compatibility.
+    // touchend fires before click on iOS so we use a flag to avoid double-firing.
+    var e = document.getElementById(id);
+    if (!e) return;
+    var fired = false;
+    e.addEventListener('touchend', function(ev) {
+      ev.preventDefault(); // prevent the ghost click on iOS
+      fired = true;
+      fn();
+      setTimeout(function() { fired = false; }, 400);
+    }, { passive: false });
+    e.addEventListener('click', function() {
+      if (!fired) fn();
+    });
+  }
+
+  function wireTab(id, tab) {
+    wireBtn(id, function() { swTab(tab); });
+  }
+
   function init() {
     var h = new Date().getHours();
     txt('greeting-title', h < 12 ? 'Good morning \ud83d\udc4b' : h < 17 ? 'Good afternoon \ud83d\udc4b' : 'Good evening \ud83d\udc4b');
@@ -1872,31 +1918,20 @@ var App = (function() {
     if (hasSaved) { hide('setup-view'); show('main-view'); }
     renderNav();
 
-    // ── DOCUMENT-LEVEL EVENT DELEGATION ──────────────────
-    // Works on all iOS Safari versions regardless of display:none state
-    document.addEventListener('click', function(e) {
-      var t = e.target;
-      // Walk up to find the actual button if click landed on child (e.g. SVG)
-      var btn = t;
-      for (var i = 0; i < 4; i++) {
-        if (!btn) break;
-        var bid = btn.id || '';
-        if (bid === 'btn-launch')      { e.preventDefault(); launch();      return; }
-        if (bid === 'btn-triage')      { e.preventDefault(); runTriage();   return; }
-        if (bid === 'chat-fab')        { e.preventDefault(); toggleChat();  return; }
-        if (bid === 'btn-chat-send')   { e.preventDefault(); sendChat();    return; }
-        if (bid === 'btn-chat-close')  { e.preventDefault(); toggleChat();  return; }
-        if (bid === 'btn-chat-clear')  { e.preventDefault(); clearChat();   return; }
-        if (bid === 'btn-settings')    { e.preventDefault(); goSettings();  return; }
-        if (bid === 'btn-triage-cal')  { e.preventDefault(); runCalendar(); return; }
-        if (bid === 'tab-flagged')  { e.preventDefault(); swTab('flagged');  return; }
-        if (bid === 'tab-archive')  { e.preventDefault(); swTab('archive');  return; }
-        if (bid === 'tab-all')      { e.preventDefault(); swTab('all');      return; }
-        if (bid === 'tab-todos')    { e.preventDefault(); swTab('todos');    return; }
-        if (bid === 'tab-calendar') { e.preventDefault(); swTab('calendar'); renderTab(); return; }
-        btn = btn.parentElement;
-      }
-    }, true); // useCapture=true so it fires even on non-interactive elements
+    // Wire static buttons — both click + touchend
+    wireBtn('btn-launch',      launch);
+    wireBtn('btn-triage',      runTriage);
+    wireBtn('chat-fab',        toggleChat);
+    wireBtn('btn-chat-send',   sendChat);
+    wireBtn('btn-chat-close',  toggleChat);
+    wireBtn('btn-chat-clear',  clearChat);
+
+    // Tabs
+    wireTab('tab-flagged',  'flagged');
+    wireTab('tab-archive',  'archive');
+    wireTab('tab-all',      'all');
+    wireTab('tab-todos',    'todos');
+    wireTab('tab-calendar', 'calendar');
 
     // Chat textarea
     var cta = el('cta');
@@ -1911,27 +1946,7 @@ var App = (function() {
     }
   }
 
-  // ── FIX 2: Persist credentials across code updates ───────────────────────
-  // Use a versioned key so even if we change the app, creds survive.
-  // On init, migrate old keys to new ones automatically.
-  function migrateCreds() {
-    var oldKeys = ['iz_cfg','iz2_cfg','iz3_cfg'];
-    if (localStorage.getItem('iz_creds')) return; // already migrated
-    for (var i = 0; i < oldKeys.length; i++) {
-      try {
-        var s = localStorage.getItem(oldKeys[i]);
-        if (s) {
-          var parsed = JSON.parse(s);
-          if (parsed && parsed.cid && parsed.akey) {
-            localStorage.setItem('iz_creds', s);
-            return;
-          }
-        }
-      } catch(e) {}
-    }
-  }
-
-  migrateCreds();
+  // loadSaved() already handles migration from all old keys — no separate step needed
 
   // Run on DOM ready
   if (document.readyState === 'loading') {
