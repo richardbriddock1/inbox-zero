@@ -729,6 +729,33 @@ input:-webkit-autofill:focus {
   caret-color: var(--text);
 }
 
+
+/* ── Watched threads ── */
+.watch-section { margin-bottom: 20px; }
+.watch-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.watch-title { font-size:var(--fs-xs); font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-3); }
+.watch-list { display:flex; flex-direction:column; gap:7px; }
+.watch-card {
+  background:var(--bg-card); border:1.5px solid var(--border);
+  border-radius:var(--r); padding:13px 16px;
+  display:flex; align-items:flex-start; gap:12px;
+  box-shadow:var(--shadow-sm); transition:box-shadow 0.16s;
+}
+.watch-card:hover { box-shadow:var(--shadow-md); }
+.watch-card.has-unread { border-left:3px solid var(--blue-mid); }
+.watch-card.has-unread .watch-subject { color:var(--navy); font-weight:700; }
+.watch-avatar { width:32px; height:32px; border-radius:50%; background:var(--blue-grad); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:white; flex-shrink:0; }
+.watch-meta { flex:1; min-width:0; }
+.watch-subject { font-size:var(--fs-sm); font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.watch-from { font-size:var(--fs-xs); color:var(--text-3); margin-top:2px; }
+.watch-status { display:flex; align-items:center; gap:6px; margin-top:5px; flex-wrap:wrap; }
+.watch-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:2px 8px; border-radius:var(--rp); }
+.watch-badge.unread { background:var(--blue-soft); color:var(--navy); border:1px solid var(--border-md); }
+.watch-badge.read { background:var(--bg); color:var(--text-3); border:1px solid var(--border); }
+.watch-actions { display:flex; gap:5px; flex-shrink:0; margin-left:auto; }
+.watch-empty { text-align:center; padding:1.5rem; color:var(--text-3); font-size:var(--fs-sm); }
+.follow-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:2px 8px; border-radius:var(--rp); background:rgba(26,79,186,0.1); color:var(--blue-mid); border:1px solid var(--border-md); margin-top:4px; }
+
 /* ── Scrollbar ── */
 * { scrollbar-width: thin; scrollbar-color: var(--border-md) transparent; }
 *::-webkit-scrollbar { width: 4px; }
@@ -806,6 +833,17 @@ input:-webkit-autofill:focus {
       <div class="stat"><div class="stat-lbl">Actioned</div><div class="stat-val green" id="s-act">0</div></div>
     </div>
     <div id="briefing-area"></div>
+    <!-- Watched Threads Panel (always visible on dashboard) -->
+    <div id="watch-panel-wrap" style="display:none;margin-bottom:18px;">
+      <div class="watch-section">
+        <div class="watch-header">
+          <span class="watch-title">👁 Watched threads</span>
+          <span id="b-watch" style="font-size:11px;font-weight:600;color:var(--blue-mid);">0</span>
+        </div>
+        <div id="watch-panel"></div>
+      </div>
+    </div>
+
     <div class="tabs" id="tabs">
       <div class="tab active" data-tab="flagged">Flagged <span class="tbadge red" id="b-flag">0</span></div>
       <div class="tab" data-tab="archive">Archive <span class="tbadge amber" id="b-arch">0</span></div>
@@ -865,6 +903,9 @@ var editingTodo = null;
 var chatHistory = [];
 var chatBusy = false;
 var calFetching = false;
+var watchedThreads = [];  // [{threadId, subject, from, snippet, addedAt, lastMsgCount, hasUnread}]
+var WATCH_KEY = "iz_watched";
+var followUpLabelId = null; // cached Gmail label ID for "Needs Follow Up"
 
 // ── Credential persistence ────────────────────────────────────
 var CRED_KEYS = ["iz_creds", "iz3_cfg", "iz2_cfg", "iz_cfg"];
@@ -909,6 +950,158 @@ function saveTodos() {
 
 function loadTodos() {
   try { todos = JSON.parse(localStorage.getItem(TODO_KEY) || "[]"); } catch(e) { todos = []; }
+}
+
+// ── Watched threads persistence ───────────────────────────────
+function saveWatched() {
+  try { localStorage.setItem(WATCH_KEY, JSON.stringify(watchedThreads)); } catch(e) {}
+}
+function loadWatched() {
+  try { watchedThreads = JSON.parse(localStorage.getItem(WATCH_KEY) || "[]"); } catch(e) { watchedThreads = []; }
+  upWatchBadge();
+}
+function upWatchBadge() {
+  var unread = watchedThreads.filter(function(w){ return w.hasUnread; }).length;
+  setTxt("b-watch", watchedThreads.length ? (unread ? "🔵 "+unread+" new" : watchedThreads.length+" watched") : "0");
+}
+
+// ── Follow Up label ───────────────────────────────────────────
+function ensureFollowUpLabel() {
+  if (followUpLabelId) return Promise.resolve(followUpLabelId);
+  // Check if it already exists
+  return gmailFetch("/labels")
+    .then(function(d) {
+      var labels = d.labels || [];
+      var existing = labels.find(function(l){ return l.name === "Needs Follow Up"; });
+      if (existing) { followUpLabelId = existing.id; return existing.id; }
+      // Create it
+      return gmailFetch("/labels", {
+        method: "POST",
+        body: JSON.stringify({
+          name: "Needs Follow Up",
+          labelListVisibility: "labelShow",
+          messageListVisibility: "show",
+          color: { backgroundColor: "#1a4fba", textColor: "#ffffff" }
+        })
+      }).then(function(d) {
+        followUpLabelId = d.id;
+        return d.id;
+      });
+    });
+}
+
+function markFollowUp(msgId, em) {
+  ensureFollowUpLabel()
+    .then(function(labelId) {
+      return gmailFetch("/messages/"+msgId+"/modify", {
+        method: "POST",
+        body: JSON.stringify({ addLabelIds: [labelId] })
+      });
+    })
+    .then(function() {
+      toast("Marked: Needs Follow Up in Gmail ✓", "success");
+      em.followUp = true;
+      renderTab();
+    })
+    .catch(function(e) { toast("Label failed: "+e.message, "error"); });
+}
+
+function watchThread(em) {
+  var already = watchedThreads.find(function(w){ return w.threadId === em.threadId; });
+  if (already) { toast("Already watching this thread", "info"); return; }
+  // Fetch current thread to get message count baseline
+  gmailFetch("/threads/"+em.threadId+"?format=minimal")
+    .then(function(d) {
+      var msgs = d.messages || [];
+      var hasUnread = msgs.some(function(m){ return (m.labelIds||[]).indexOf("UNREAD") > -1; });
+      watchedThreads.unshift({
+        threadId: em.threadId,
+        msgId: em.id,
+        subject: em.subject,
+        from: em.from,
+        snippet: em.snippet,
+        addedAt: Date.now(),
+        msgCount: msgs.length,
+        hasUnread: hasUnread
+      });
+      saveWatched();
+      upWatchBadge();
+      toast("Watching thread: "+em.subject, "success");
+      renderTab();
+      // Refresh dashboard watch panel if visible
+      if (activeTab === "flagged" || activeTab === "all") renderWatchPanel();
+    })
+    .catch(function(e) { toast("Watch failed: "+e.message, "error"); });
+}
+
+function unwatchThread(threadId) {
+  watchedThreads = watchedThreads.filter(function(w){ return w.threadId !== threadId; });
+  saveWatched();
+  upWatchBadge();
+  renderWatchPanel();
+  toast("Stopped watching", "info");
+}
+
+function refreshWatched() {
+  if (!watchedThreads.length || !gmailToken) return;
+  var promises = watchedThreads.map(function(w) {
+    return gmailFetch("/threads/"+w.threadId+"?format=minimal")
+      .then(function(d) {
+        var msgs = d.messages || [];
+        var hasUnread = msgs.some(function(m){ return (m.labelIds||[]).indexOf("UNREAD") > -1; });
+        var newMsgs = msgs.length > w.msgCount;
+        w.msgCount = msgs.length;
+        w.hasUnread = hasUnread || newMsgs;
+        if (msgs.length > 0) {
+          var last = msgs[msgs.length-1];
+          w.snippet = last.snippet || w.snippet;
+        }
+      })
+      .catch(function(){});
+  });
+  Promise.all(promises).then(function() {
+    saveWatched();
+    upWatchBadge();
+    renderWatchPanel();
+  });
+}
+
+function renderWatchPanel() {
+  var area = $("watch-panel");
+  if (!area) return;
+  if (!watchedThreads.length) {
+    area.innerHTML = "<div class="watch-empty">No watched threads yet. Open an email and click <strong>Watch thread</strong> to track it.</div>";
+    return;
+  }
+  var html = "<div class="watch-list">";
+  watchedThreads.forEach(function(w) {
+    var ini = avatarIni(w.from);
+    html += "<div class="watch-card "+(w.hasUnread?"has-unread":"")+"">"+
+      "<div class="watch-avatar">"+esc(ini)+"</div>"+
+      "<div class="watch-meta">"+
+        "<div class="watch-subject">"+esc(w.subject)+"</div>"+
+        "<div class="watch-from">"+esc(sndrName(w.from))+"</div>"+
+        "<div class="watch-status">"+
+          (w.hasUnread
+            ? "<span class="watch-badge unread">🔵 New activity</span>"
+            : "<span class="watch-badge read">✓ Up to date</span>")+
+          "<span style="font-size:11px;color:var(--text-3);">"+w.msgCount+" message"+(w.msgCount!==1?"s":"")+"</span>"+
+        "</div>"+
+        "<div style="font-size:var(--fs-xs);color:var(--text-3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"+esc(w.snippet)+"</div>"+
+      "</div>"+
+      "<div class="watch-actions">"+
+        "<button class="btn btn-ghost btn-xs" id="unwatch-"+w.threadId+"" title="Stop watching">×</button>"+
+      "</div>"+
+    "</div>";
+  });
+  html += "</div>";
+  html += "<div style="text-align:right;margin-top:8px;"><button class="btn btn-sm" id="btn-refresh-watch">↻ Refresh</button></div>";
+  area.innerHTML = html;
+
+  watchedThreads.forEach(function(w) {
+    addClick("unwatch-"+w.threadId, function(){ unwatchThread(w.threadId); });
+  });
+  addClick("btn-refresh-watch", function(){ refreshWatched(); toast("Refreshing watched threads…","info"); });
 }
 
 // ── DOM helpers ───────────────────────────────────────────────
@@ -1096,6 +1289,8 @@ function doTriage(list) {
       upChatCtx();
       renderTab();
       if (flagged.length) suggestTodos(flagged);
+      // Refresh watched thread status now that token is fresh
+      setTimeout(refreshWatched, 500);
     });
 }
 
@@ -1141,6 +1336,10 @@ function switchTab(tab) {
 function renderTab() {
   if (activeTab === "todos")    { renderTodos(); return; }
   if (activeTab === "calendar") { renderCalendar(); return; }
+  // Show/hide watched threads panel
+  var wp = $("watch-panel-wrap");
+  if (wp) wp.style.display = watchedThreads.length ? "block" : "none";
+  if (watchedThreads.length) renderWatchPanel();
 
   var list = activeTab==="flagged" ? flagged : activeTab==="archive" ? archiveCandidates : allEmails;
   if (!list.length) {
@@ -1184,7 +1383,10 @@ function renderTab() {
       html += "<div class=\"eactions\">";
       if (activeTab!=="archive") html += "<button class=\"btn btn-blue btn-sm\" id=\"open-cmp-"+em.id+"\">Draft reply</button>";
       html += "<button class=\"btn btn-red btn-sm\" id=\"arch-one-"+em.id+"\">Archive</button>";
+      html += "<button class=\"btn btn-amber btn-sm\" id=\"followup-"+em.id+"\">"+(em.followUp?"✓ Follow Up":"Follow Up")+"</button>";
+      html += "<button class=\"btn btn-sm\" id=\"watch-"+em.id+"\">👁 Watch</button>";
       if (!em.fullBody) html += "<button class=\"btn btn-sm\" id=\"load-full-"+em.id+"\">Load full email</button>";
+      if (em.followUp) html += "<span class=\"follow-badge\">📌 Needs Follow Up</span>";
       html += "</div></div>";
       if (composers[em.id]) {
         html += "<div class=\"composer\">"+
@@ -1220,6 +1422,8 @@ function renderTab() {
     addClick("arch-one-"+em.id, function() { archiveOne(em.id); });
     addClick("load-full-"+em.id, function() { loadFull(em); });
     addClick("open-cmp-"+em.id, function() { composers[em.id]=true; renderTab(); });
+    addClick("followup-"+em.id, function() { markFollowUp(em.id, em); });
+    addClick("watch-"+em.id, function() { watchThread(em); });
     addClick("cancel-cmp-"+em.id, function() { delete composers[em.id]; renderTab(); });
     addClick("gen-"+em.id, function() { genReply(em); });
     addClick("send-"+em.id, function() { sendReply(em); });
@@ -1651,6 +1855,11 @@ function fmtDate(s){
 document.addEventListener("DOMContentLoaded", function() {
   loadTodos();
   upTodoBadge();
+  loadWatched();
+  // Refresh watched threads in background after a short delay
+  setTimeout(function() {
+    if (gmailToken) refreshWatched();
+  }, 2000);
 
   // Wire static buttons — these elements exist in HTML at all times
   $("btn-launch").addEventListener("click", launch);
