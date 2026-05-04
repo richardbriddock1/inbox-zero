@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en" style="color-scheme:light;">
+<html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
@@ -8,9 +8,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="Inbox Zero"/>
 <meta name="theme-color" content="#0d2b6e"/>
-<title>Inbox Zero — AI Email Triage</title>
+<title>Inbox Zero</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -745,51 +745,49 @@ input:-webkit-autofill:focus {
       </div>
       <span class="logo-text">Inbox Zero</span>
     </div>
-    <div class="topbar-right" id="topbar-right"></div>
+    <div id="nav-right"></div>
   </nav>
 
-  <!-- SETUP VIEW -->
-  <div id="setup-view">
+  <div id="view-setup">
     <div class="setup-wrap">
       <div class="setup-hero">
         <div class="eyebrow">AI-powered email</div>
         <h1 class="setup-title">Zero inbox,<br>zero effort.</h1>
-        <p class="setup-sub">Connect your Gmail and Claude API key to start triaging, drafting, and archiving at the speed of thought.</p>
+        <p class="setup-sub">Connect Gmail and Claude to triage, draft, and archive at the speed of thought.</p>
       </div>
       <div class="card">
         <div class="card-label">Gmail OAuth</div>
-        <div class="field"><label>Client ID</label><input type="text" id="s-cid" autocomplete="off" placeholder="xxxxxx.apps.googleusercontent.com"/></div>
-        <div class="field"><label>Client Secret</label><input type="password" id="s-csec" autocomplete="off" placeholder="GOCSPX-…"/></div>
-        <div class="field"><label>Refresh Token</label><input type="password" id="s-rtok" autocomplete="off" placeholder="1//0g…"/></div>
+        <div class="field"><label>Client ID</label><input id="f-cid" type="text" placeholder="xxxxxx.apps.googleusercontent.com" autocomplete="off"/></div>
+        <div class="field"><label>Client Secret</label><input id="f-csec" type="password" placeholder="GOCSPX-…" autocomplete="off"/></div>
+        <div class="field"><label>Refresh Token</label><input id="f-rtok" type="password" placeholder="1//0g…" autocomplete="off"/></div>
       </div>
       <div class="card">
         <div class="card-label">Claude AI</div>
-        <div class="field"><label>Anthropic API Key</label><input type="password" id="s-akey" autocomplete="off" placeholder="sk-ant-…"/></div>
+        <div class="field"><label>Anthropic API Key</label><input id="f-akey" type="password" placeholder="sk-ant-…" autocomplete="off"/></div>
       </div>
       <div class="card">
-        <div class="card-label">Triage settings</div>
-        <div class="field"><label>Priority senders (comma-separated)</label><input type="text" id="s-priority" value="@csdecatur.net"/></div>
+        <div class="card-label">Settings</div>
+        <div class="field"><label>Priority senders (comma-separated)</label><input id="f-priority" type="text" value="@csdecatur.net"/></div>
       </div>
       <div class="notice">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 5.5v.2" stroke-linecap="round"/></svg>
-        Credentials are saved in your browser only. Never sent to Anthropic — only to Google and Anthropic APIs directly.
+        Stored in your browser only. Never sent anywhere except Google and Anthropic APIs.
       </div>
       <div style="margin-top:20px;">
-        <button id="btn-launch" class="btn btn-primary btn-full" style="font-size:17px;height:56px;">Get started →</button>
+        <button id="btn-launch" class="btn btn-primary btn-full" style="height:56px;font-size:17px;">Get started →</button>
       </div>
-      <div id="setup-err" style="margin-top:12px;"></div>
+      <div id="setup-msg" style="margin-top:12px;"></div>
     </div>
   </div>
 
-  <!-- MAIN VIEW -->
-  <div id="main-view" style="display:none;">
-    <div class="main-hdr">
+  <div id="view-main" style="display:none;">
+    <div style="margin-bottom:20px;">
       <div class="greeting-bar">
-        <div class="greeting-title" id="greeting-title">Your inbox</div>
+        <div class="greeting-title" id="greeting">Your inbox</div>
         <div class="greeting-sub" id="main-sub">Select a timeframe and run triage.</div>
       </div>
-      <div class="main-controls">
-        <select class="tf-sel" id="tf-sel">
+      <div class="main-controls" style="margin-top:12px;">
+        <select id="tf" class="tf-sel">
           <option value="1d">Last 24 hours</option>
           <option value="2d">Last 2 days</option>
           <option value="3d">Last 3 days</option>
@@ -802,1166 +800,895 @@ input:-webkit-autofill:focus {
       </div>
     </div>
     <div class="stats">
-      <div class="stat"><div class="stat-lbl">Total</div><div class="stat-val" id="st-t">—</div></div>
-      <div class="stat"><div class="stat-lbl">Flagged</div><div class="stat-val red" id="st-f">—</div></div>
-      <div class="stat"><div class="stat-lbl">To archive</div><div class="stat-val amber" id="st-a">—</div></div>
-      <div class="stat"><div class="stat-lbl">Actioned</div><div class="stat-val green" id="st-act">0</div></div>
+      <div class="stat"><div class="stat-lbl">Total</div><div class="stat-val" id="s-total">—</div></div>
+      <div class="stat"><div class="stat-lbl">Flagged</div><div class="stat-val red" id="s-flag">—</div></div>
+      <div class="stat"><div class="stat-lbl">Archive</div><div class="stat-val amber" id="s-arch">—</div></div>
+      <div class="stat"><div class="stat-lbl">Actioned</div><div class="stat-val green" id="s-act">0</div></div>
     </div>
     <div id="briefing-area"></div>
-    <div class="tabs">
-      <div class="tab active" id="tab-flagged">Flagged <span class="tbadge red" id="b-f">0</span></div>
-      <div class="tab" id="tab-archive">Archive <span class="tbadge amber" id="b-a">0</span></div>
-      <div class="tab" id="tab-all">All emails</div>
-      <div class="tab" id="tab-todos">To-do <span class="tbadge green" id="b-td">0</span></div>
-      <div class="tab" id="tab-calendar">Calendar 📅</div>
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-tab="flagged">Flagged <span class="tbadge red" id="b-flag">0</span></div>
+      <div class="tab" data-tab="archive">Archive <span class="tbadge amber" id="b-arch">0</span></div>
+      <div class="tab" data-tab="all">All emails</div>
+      <div class="tab" data-tab="todos">To-do <span class="tbadge green" id="b-todo">0</span></div>
+      <div class="tab" data-tab="calendar">Calendar</div>
     </div>
-    <div id="tab-content"><div class="empty-wrap"><div class="empty-icon">✉</div>Run triage to load your inbox</div></div>
+    <div id="tab-body"><div class="empty-wrap"><div class="empty-icon">✉</div>Run triage to load your inbox</div></div>
   </div>
 </div>
 
-<!-- Chat FAB -->
 <button id="chat-fab" class="chat-fab" title="Ask Claude">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 </button>
 
-<!-- Chat Panel -->
-<div class="chat-panel" id="chat-panel">
+<div id="chat-panel" class="chat-panel">
   <div class="cph">
-    <div class="cph-l">
-      <div class="cph-dot"></div>
-      <div><div class="cph-name">Ask Claude</div><div class="cph-sub">Inbox-aware AI assistant</div></div>
-    </div>
+    <div class="cph-l"><div class="cph-dot"></div><div><div class="cph-name">Ask Claude</div><div class="cph-sub">Inbox-aware AI</div></div></div>
     <div class="cph-r">
       <button id="btn-chat-clear" class="cclear">Clear</button>
-      <button id="btn-chat-close" class="btn btn-ghost btn-icon btn-sm">
+      <button id="btn-chat-close" class="btn btn-ghost btn-icon btn-sm" style="color:white;">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
       </button>
     </div>
   </div>
-  <div class="cctx">
-    <span class="cctx-val" id="cctx-lbl">No inbox loaded yet</span>
-  </div>
-  <div class="cmsgs" id="cmsgs">
-    <div class="cmsg assistant"><div class="cbubble">Hi! I'm Claude. Ask me anything about your emails or anything else. Run triage first and I'll have full context of your inbox.</div></div>
+  <div class="cctx"><span class="cctx-val" id="chat-ctx">No inbox loaded</span></div>
+  <div class="cmsgs" id="chat-msgs">
+    <div class="cmsg assistant"><div class="cbubble">Hi! I'm Claude. Run triage and I'll have context of your full inbox. Ask me anything.</div></div>
   </div>
   <div class="cinput-row">
-    <textarea id="cta" class="cta" placeholder="Ask anything…" rows="1"></textarea>
+    <textarea id="chat-input" class="cta" rows="1" placeholder="Ask anything…"></textarea>
     <button id="btn-chat-send" class="csend">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
     </button>
   </div>
 </div>
 
-<div class="tstack" id="tstack"></div>
+<div id="toast-area" style="position:fixed;bottom:90px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:999;pointer-events:none;"></div>
 
 <script>
-// ============================================================
-// INBOX ZERO — Clean rewrite, addEventListener only
-// No onclick attributes. All events wired in init().
-// ============================================================
+// =============================================================
+// INBOX ZERO — Complete clean rewrite
+// Simple globals + direct addEventListener. No modules, no IIFE.
+// =============================================================
 
-var App = (function() {
+// ── State ─────────────────────────────────────────────────────
+var cfg = {};
+var gmailToken = null;
+var emails = [];
+var flagged = [], archiveCandidates = [], allEmails = [];
+var expanded = {}, composers = {}, checked = {};
+var actioned = 0;
+var activeTab = "flagged";
+var todos = [];
+var pendingSuggestions = [];
+var editingTodo = null;
+var chatHistory = [];
+var chatBusy = false;
+var calFetching = false;
 
-  // ── State ────────────────────────────────────────────────
-  var cfg = {};
-  var emails = [];
-  var results = { flagged: [], archive: [], all: [] };
-  var expanded = {};
-  var composers = {};
-  var selected = {};
-  var actioned = 0;
-  var activeTab = 'flagged';
-  var gmailToken = null;
-  var chatOpen = false;
-  var chatHistory = [];
-  var chatBusy = false;
-  var todos = [];
-  var pendingSuggestions = [];
-  var editingTodoId = null;
+// ── Credential persistence ────────────────────────────────────
+var CRED_KEYS = ["iz_creds", "iz3_cfg", "iz2_cfg", "iz_cfg"];
+var TODO_KEY  = "iz_todos";
 
-  // ── DOM helpers ──────────────────────────────────────────
-  function el(id) { return document.getElementById(id); }
-  function show(id) { var e = el(id); if (e) e.style.display = 'block'; }
-  function hide(id) { var e = el(id); if (e) e.style.display = 'none'; }
-  function txt(id, val) { var e = el(id); if (e) e.textContent = val; }
-  function val(id) { var e = el(id); return e ? e.value.trim() : ''; }
-  function setVal(id, v) { var e = el(id); if (e) e.value = v || ''; }
-  function setHTML(id, html) { var e = el(id); if (e) e.innerHTML = html; }
+function saveCreds() {
+  var data = JSON.stringify(cfg);
+  CRED_KEYS.forEach(function(k) {
+    try { localStorage.setItem(k, data); } catch(e) {}
+    try { sessionStorage.setItem(k, data); } catch(e) {}
+  });
+}
 
-  function on(id, evt, fn) {
-    var e = el(id);
-    if (e) e.addEventListener(evt, fn);
-  }
-
-  function toast(msg, type) {
-    type = type || 'info';
-    var s = el('tstack');
-    if (!s) return;
-    var d = document.createElement('div');
-    d.className = 'toast ' + type;
-    d.textContent = msg;
-    s.appendChild(d);
-    setTimeout(function() { if (d.parentNode) d.parentNode.removeChild(d); }, 3200);
-  }
-
-  function esc(s) {
-    return String(s || '')
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  // ── Credentials & setup ──────────────────────────────────
-  function loadSaved() {
-    // Try every known key in every storage type — whichever has valid creds wins
-    var keys = ['iz_creds', 'iz3_cfg', 'iz2_cfg', 'iz_cfg'];
-    var storages = [];
-    try { storages.push(localStorage); } catch(e) {}
-    try { storages.push(sessionStorage); } catch(e) {}
-
-    for (var si = 0; si < storages.length; si++) {
-      for (var ki = 0; ki < keys.length; ki++) {
-        try {
-          var s = storages[si].getItem(keys[ki]);
-          if (!s) continue;
-          var saved = JSON.parse(s);
-          if (!saved || !saved.cid || !saved.akey) continue;
-          // Found valid creds — load them and re-save to all keys
-          cfg = saved;
-          setVal('s-cid', cfg.cid);
-          setVal('s-csec', cfg.csec);
-          setVal('s-rtok', cfg.rtok);
-          setVal('s-akey', cfg.akey);
-          setVal('s-priority', cfg.priority || '@csdecatur.net');
-          // Re-save to all keys/storages to ensure persistence going forward
-          saveCreds();
-          return true;
-        } catch(e) {}
-      }
-    }
-    return false;
-  }
-
-  function saveCreds() {
-    var data = JSON.stringify(cfg);
-    // Write to multiple keys so any code version finds them
-    var keys = ['iz_creds', 'iz3_cfg', 'iz2_cfg'];
-    keys.forEach(function(k) {
-      try { localStorage.setItem(k, data); } catch(e) {}
-      try { sessionStorage.setItem(k, data); } catch(e) {}
-    });
-  }
-
-  function launch() {
-    var cid = val('s-cid');
-    var csec = val('s-csec');
-    var rtok = val('s-rtok');
-    var akey = val('s-akey');
-    var priority = val('s-priority') || '@csdecatur.net';
-
-    if (!cid || !csec || !rtok || !akey) {
-      setHTML('setup-err', '<div class="err-banner">Please fill in all four credential fields.</div>');
-      return;
-    }
-    cfg = { cid: cid, csec: csec, rtok: rtok, akey: akey, priority: priority };
-    saveCreds();
-    hide('setup-view');
-    show('main-view');
-    renderNav();
-  }
-
-  function goSettings() {
-    hide('main-view');
-    show('setup-view');
-    setVal('s-cid', cfg.cid);
-    setVal('s-csec', cfg.csec);
-    setVal('s-rtok', cfg.rtok);
-    setVal('s-akey', cfg.akey);
-    setVal('s-priority', cfg.priority);
-    setHTML('setup-err', '<div style="font-size:13px;color:#8a98b8;margin-top:8px;">Credentials saved. <button id="btn-clear-creds" style="background:none;border:none;color:#d63031;cursor:pointer;font-size:13px;text-decoration:underline;padding:0;">Clear</button></div>');
-    on('btn-clear-creds', 'click', function() {
-      try { 
-        // Clear all known credential keys
-        ['iz_creds','iz3_cfg','iz2_cfg','iz_cfg'].forEach(function(k) { 
-          try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch(x) {} 
-        });
+function loadCreds() {
+  var stores = [];
+  try { stores.push(localStorage); } catch(e) {}
+  try { stores.push(sessionStorage); } catch(e) {}
+  for (var si = 0; si < stores.length; si++) {
+    for (var ki = 0; ki < CRED_KEYS.length; ki++) {
+      try {
+        var raw = stores[si].getItem(CRED_KEYS[ki]);
+        if (!raw) continue;
+        var obj = JSON.parse(raw);
+        if (obj && obj.cid && obj.akey) { cfg = obj; saveCreds(); return true; }
       } catch(e) {}
-      cfg = {};
-      toast('Credentials cleared', 'info');
-    });
-  }
-
-  function renderNav() {
-    var nav = el('topbar-right');
-    if (!nav) return;
-    if (cfg.cid) {
-      nav.innerHTML = '<button id="btn-settings" class="btn btn-sm">Settings</button>';
-      wireBtn('btn-settings', goSettings);
-    } else {
-      nav.innerHTML = '';
     }
   }
+  return false;
+}
 
-  // ── Gmail API ────────────────────────────────────────────
-  function getToken() {
-    return fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'client_id=' + encodeURIComponent(cfg.cid) +
-            '&client_secret=' + encodeURIComponent(cfg.csec) +
-            '&refresh_token=' + encodeURIComponent(cfg.rtok) +
-            '&grant_type=refresh_token'
+function clearAllCreds() {
+  CRED_KEYS.forEach(function(k) {
+    try { localStorage.removeItem(k); } catch(e) {}
+    try { sessionStorage.removeItem(k); } catch(e) {}
+  });
+  cfg = {};
+}
+
+function saveTodos() {
+  try { localStorage.setItem(TODO_KEY, JSON.stringify(todos)); } catch(e) {}
+}
+
+function loadTodos() {
+  try { todos = JSON.parse(localStorage.getItem(TODO_KEY) || "[]"); } catch(e) { todos = []; }
+}
+
+// ── DOM helpers ───────────────────────────────────────────────
+function $(id) { return document.getElementById(id); }
+function show(id) { var e = $(id); if (e) e.style.display = "block"; }
+function hide(id) { var e = $(id); if (e) e.style.display = "none"; }
+function setTxt(id, v) { var e = $(id); if (e) e.textContent = v; }
+function setHTML(id, h) { var e = $(id); if (e) e.innerHTML = h; }
+function getVal(id) { var e = $(id); return e ? e.value.trim() : ""; }
+function setVal(id, v) { var e = $(id); if (e) e.value = v || ""; }
+
+function toast(msg, type) {
+  var area = $("toast-area");
+  if (!area) return;
+  var d = document.createElement("div");
+  d.className = "toast " + (type || "info");
+  d.textContent = msg;
+  area.appendChild(d);
+  setTimeout(function() { if (d.parentNode) d.parentNode.removeChild(d); }, 3000);
+}
+
+function esc(s) {
+  return String(s || "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ── Views ──────────────────────────────────────────────────────
+function showMain() {
+  hide("view-setup");
+  show("view-main");
+  var h = new Date().getHours();
+  setTxt("greeting", h < 12 ? "Good morning 👋" : h < 17 ? "Good afternoon 👋" : "Good evening 👋");
+  renderNav();
+}
+
+function showSetup() {
+  show("view-setup");
+  hide("view-main");
+  setVal("f-cid", cfg.cid);
+  setVal("f-csec", cfg.csec);
+  setVal("f-rtok", cfg.rtok);
+  setVal("f-akey", cfg.akey);
+  setVal("f-priority", cfg.priority || "@csdecatur.net");
+}
+
+function renderNav() {
+  var nav = $("nav-right");
+  if (!nav) return;
+  nav.innerHTML = cfg.cid
+    ? "<button id=\"btn-settings\" class=\"btn btn-sm\">Settings</button>"
+    : "";
+  if ($("btn-settings")) $("btn-settings").addEventListener("click", showSetup);
+}
+
+// ── Launch ────────────────────────────────────────────────────
+function launch() {
+  var cid  = getVal("f-cid");
+  var csec = getVal("f-csec");
+  var rtok = getVal("f-rtok");
+  var akey = getVal("f-akey");
+  var priority = getVal("f-priority") || "@csdecatur.net";
+  if (!cid || !csec || !rtok || !akey) {
+    setHTML("setup-msg", "<div class=\"err-banner\">Please fill in all four credential fields.</div>");
+    return;
+  }
+  cfg = { cid:cid, csec:csec, rtok:rtok, akey:akey, priority:priority };
+  saveCreds();
+  showMain();
+}
+
+// ── APIs ──────────────────────────────────────────────────────
+function getToken() {
+  return fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: "client_id=" + encodeURIComponent(cfg.cid) +
+          "&client_secret=" + encodeURIComponent(cfg.csec) +
+          "&refresh_token=" + encodeURIComponent(cfg.rtok) +
+          "&grant_type=refresh_token"
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (!d.access_token) throw new Error(d.error_description || "OAuth failed. Check credentials.");
+    gmailToken = d.access_token;
+    return gmailToken;
+  });
+}
+
+function gmailFetch(path, opts) {
+  opts = opts || {};
+  return fetch("https://gmail.googleapis.com/gmail/v1/users/me" + path, {
+    method: opts.method || "GET",
+    headers: { "Authorization": "Bearer " + gmailToken, "Content-Type": "application/json" },
+    body: opts.body
+  }).then(function(r) { return r.json(); });
+}
+
+function claude(messages, system, maxTok) {
+  var body = { model: "claude-sonnet-4-20250514", max_tokens: maxTok || 1000, messages: messages };
+  if (system) body.system = system;
+  return fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": cfg.akey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify(body)
+  }).then(function(r) { return r.json(); });
+}
+
+function claudeText(data) {
+  return data && data.content && data.content[0] && data.content[0].text || "";
+}
+
+// ── Triage ────────────────────────────────────────────────────
+function runTriage() {
+  var tf = getVal("tf") || "1d";
+  setHTML("tab-body", "<div class=\"loading-wrap\"><div class=\"spinner\"></div>Connecting to Gmail…</div>");
+  setHTML("briefing-area", "");
+  upStats(0,0,0);
+
+  getToken()
+    .then(function() { return gmailFetch("/messages?maxResults=50&q=in:inbox newer_than:" + tf); })
+    .then(function(res) {
+      if (!res.messages || !res.messages.length) {
+        setHTML("tab-body", "<div class=\"empty-wrap\"><div class=\"empty-icon\">✓</div>No emails found.</div>");
+        return null;
+      }
+      setHTML("tab-body", "<div class=\"loading-wrap\"><div class=\"spinner\"></div>Loading " + res.messages.length + " emails…</div>");
+      return Promise.all(res.messages.slice(0,50).map(function(m) {
+        return gmailFetch("/messages/" + m.id + "?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date");
+      }));
     })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (!d.access_token) throw new Error(d.error_description || 'OAuth failed — check your credentials.');
-      gmailToken = d.access_token;
-      return gmailToken;
+    .then(function(details) {
+      if (!details) return;
+      allEmails = details.map(function(m) {
+        var h = {};
+        (m.payload && m.payload.headers || []).forEach(function(x) { h[x.name.toLowerCase()] = x.value; });
+        return { id:m.id, threadId:m.threadId, from:h.from||"", subject:h.subject||"(no subject)", date:h.date||"", snippet:m.snippet||"" };
+      });
+      setHTML("tab-body", "<div class=\"loading-wrap\"><div class=\"spinner\"></div>Analyzing with Claude…</div>");
+      return doTriage(allEmails);
+    })
+    .catch(function(e) {
+      setHTML("tab-body", "<div class=\"err-banner\" style=\"margin:1rem;\">"+esc(e.message)+"</div>");
     });
-  }
+}
 
-  function gapi(path, opts) {
-    opts = opts || {};
-    var doFetch = function() {
-      return fetch('https://gmail.googleapis.com/gmail/v1/users/me' + path, {
-        method: opts.method || 'GET',
-        headers: { Authorization: 'Bearer ' + gmailToken, 'Content-Type': 'application/json' },
-        body: opts.body || undefined
-      }).then(function(r) { return r.json(); });
-    };
-    if (gmailToken) return doFetch();
-    return getToken().then(doFetch);
-  }
+function doTriage(list) {
+  var lines = list.map(function(e,i) {
+    return "["+i+"] FROM: "+e.from+"\nSUBJECT: "+e.subject+"\nSNIPPET: "+e.snippet;
+  }).join("\n\n");
 
-  function claudeAPI(messages, systemPrompt, maxTokens) {
-    var body = {
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: maxTokens || 1000,
-      messages: messages
-    };
-    if (systemPrompt) body.system = systemPrompt;
-    return fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': cfg.akey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify(body)
-    }).then(function(r) { return r.json(); });
-  }
+  var prompt = "Analyze these "+list.length+" emails. Return ONLY valid JSON, no markdown.\n\n"+
+    "FLAG if ANY: time-sensitive, needs action, financial/account alert, security, from priority ("+cfg.priority+"), legal/medical/govt.\n"+
+    "ARCHIVE if: newsletter, promo, marketing, automated digest.\n\n"+
+    "briefing = 3-5 sentence chief-of-staff paragraph, name senders and subjects, lead with urgent, max 100 words.\n\n"+
+    "Return: {\"flagged\":[{\"index\":0,\"reason\":\"short\",\"summary\":\"2-3 sentences\",\"urgency\":\"high|medium|low\"}],"+
+    "\"archive\":[{\"index\":0,\"reason\":\"short\"}],\"overview\":\"one sentence\",\"briefing\":\"paragraph\"}\n\nEMAILS:\n"+lines;
 
-  // ── Triage ───────────────────────────────────────────────
-  function runTriage() {
-    var tf = val('tf-sel') || '1d';
-    setHTML('tab-content', '<div class="loading-wrap"><div class="spinner"></div>Connecting to Gmail…</div>');
-    setHTML('briefing-area', '');
-    upStats(0, 0, 0);
+  return claude([{role:"user",content:prompt}], null, 2500)
+    .then(function(data) {
+      var raw = claudeText(data).replace(/```json|```/g,"").trim();
+      var p; try { p = JSON.parse(raw); } catch(e) { p = {flagged:[],archive:[],overview:"Done.",briefing:""}; }
 
-    getToken()
-      .then(function() {
-        return gapi('/messages?maxResults=50&q=in:inbox newer_than:' + tf);
-      })
-      .then(function(list) {
-        if (!list.messages || !list.messages.length) {
-          setHTML('tab-content', '<div class="empty-wrap"><div class="empty-icon">✓</div>No emails in this timeframe.</div>');
-          return null;
-        }
-        setHTML('tab-content', '<div class="loading-wrap"><div class="spinner"></div>Loading ' + list.messages.length + ' emails…</div>');
-        var fetches = list.messages.slice(0, 50).map(function(m) {
-          return gapi('/messages/' + m.id + '?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date');
-        });
-        return Promise.all(fetches);
-      })
-      .then(function(details) {
-        if (!details) return;
-        emails = details.map(function(msg) {
-          var h = {};
-          (msg.payload && msg.payload.headers || []).forEach(function(x) { h[x.name.toLowerCase()] = x.value; });
-          return { id: msg.id, threadId: msg.threadId, from: h.from || '', subject: h.subject || '(no subject)', date: h.date || '', snippet: msg.snippet || '' };
-        });
-        setHTML('tab-content', '<div class="loading-wrap"><div class="spinner"></div>Analyzing with Claude AI…</div>');
-        return claudeTriage(emails);
-      })
-      .catch(function(e) {
-        setHTML('tab-content', '<div class="err-banner" style="margin:1rem;">' + esc(e.message) + '</div>');
-      });
-  }
+      flagged = (p.flagged||[]).map(function(f) {
+        var e = list[f.index]; if (!e) return null;
+        return Object.assign({}, e, {reason:f.reason, summary:f.summary, urgency:f.urgency});
+      }).filter(Boolean);
 
-  function claudeTriage(list) {
-    var emailData = list.map(function(e, i) {
-      return '[' + i + '] FROM: ' + e.from + '\nSUBJECT: ' + e.subject + '\nSNIPPET: ' + e.snippet;
-    }).join('\n\n');
+      archiveCandidates = (p.archive||[]).map(function(a) {
+        var e = list[a.index]; if (!e) return null;
+        return Object.assign({}, e, {reason:a.reason});
+      }).filter(Boolean);
 
-    var prompt = 'Analyze these ' + list.length + ' emails. Return ONLY valid JSON, no markdown.\n\n' +
-      'FLAG if ANY: time-sensitive, requires action, financial/account alert, security alert, from priority sender (' + (cfg.priority || '@csdecatur.net') + '), legal/medical/government.\n' +
-      'ARCHIVE if: newsletter, promotional, marketing, automated digest.\n\n' +
-      'The briefing field must be 3-5 sentences written like a chief of staff morning briefing, naming specific senders and subjects, leading with urgent items, max 100 words.\n\n' +
-      'Return: {"flagged":[{"index":0,"reason":"short reason","summary":"2-3 sentences on what this is and what action is needed","urgency":"high|medium|low"}],"archive":[{"index":0,"reason":"short reason"}],"overview":"one sentence","briefing":"paragraph"}\n\nEMAILS:\n' + emailData;
-
-    return claudeAPI([{ role: 'user', content: prompt }], null, 2500)
-      .then(function(data) {
-        var raw = (data.content && data.content[0] && data.content[0].text || '{}').replace(/```json|```/g, '').trim();
-        var parsed;
-        try { parsed = JSON.parse(raw); } catch(e) { parsed = { flagged:[], archive:[], overview:'Triage complete.', briefing:'' }; }
-
-        results.flagged = (parsed.flagged || []).map(function(f) {
-          var e = list[f.index];
-          if (!e) return null;
-          return Object.assign({}, e, { triageReason: f.reason, triageSummary: f.summary, urgency: f.urgency });
-        }).filter(Boolean);
-
-        results.archive = (parsed.archive || []).map(function(a) {
-          var e = list[a.index];
-          if (!e) return null;
-          return Object.assign({}, e, { triageReason: a.reason });
-        }).filter(Boolean);
-
-        results.all = list;
-        expanded = {}; composers = {}; selected = {};
-
-        txt('main-sub', parsed.overview || 'Triage complete.');
-        txt('b-f', results.flagged.length);
-        txt('b-a', results.archive.length);
-        upStats(list.length, results.flagged.length, results.archive.length);
-        renderBriefing(parsed.briefing || '', parsed.flagged || []);
-        upChatCtx();
-        renderTab();
-        if (results.flagged.length) suggestTodos(results.flagged);
-      });
-  }
-
-  function upStats(t, f, a) {
-    txt('st-t', t || '—'); txt('st-f', f || '—'); txt('st-a', a || '—');
-  }
-
-  // ── Calendar ─────────────────────────────────────────────
-  var calendarData = [];
-  var calendarFetching = false;
-
-  function runCalendar() {
-    // Guard against recursive calls from swTab
-    if (calendarFetching) return;
-    calendarFetching = true;
-    setHTML('tab-content', '<div class="loading-wrap"><div class="spinner"></div>Fetching your calendar…</div>');
-
-    // Start of current day (midnight local)
-    var now = new Date();
-    var dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    // 8 days out to capture full week
-    var weekEnd = new Date(dayStart.getTime() + 8 * 24 * 60 * 60 * 1000);
-
-    var calUrl = 'https://www.googleapis.com/calendar/v3/calendars/primary/events' +
-      '?timeMin=' + encodeURIComponent(dayStart.toISOString()) +
-      '&timeMax=' + encodeURIComponent(weekEnd.toISOString()) +
-      '&singleEvents=true' +
-      '&orderBy=startTime' +
-      '&maxResults=100' +
-      '&showDeleted=false';
-
-    var doCalFetch = function() {
-      return fetch(calUrl, {
-        headers: { Authorization: 'Bearer ' + gmailToken, Accept: 'application/json' }
-      }).then(function(r) {
-        if (!r.ok) return r.json().then(function(e) { throw new Error((e.error && e.error.message) || 'Calendar API returned ' + r.status); });
-        return r.json();
-      });
-    };
-
-    // Always get a fresh token first — the current gmailToken may have expired
-    getToken()
-      .then(doCalFetch)
-      .then(function(data) {
-        if (data.error) throw new Error(data.error.message || 'Calendar API error');
-        calendarData = (data.items || []).filter(function(ev) {
-          return ev.status !== 'cancelled' && (ev.summary || ev.description);
-        });
-
-        if (!calendarData.length) {
-          calendarFetching = false;
-          setHTML('tab-content',
-            '<div class="empty-wrap"><div class="empty-icon">📅</div>' +
-            '<div style="font-size:var(--fs-lg);font-weight:600;color:var(--text);margin-bottom:8px;">No events this week</div>' +
-            '<div style="color:var(--text-3);">Your calendar is clear for the next 7 days.</div></div>');
-          return;
-        }
-
-        setHTML('tab-content', '<div class="loading-wrap"><div class="spinner"></div>Summarizing ' + calendarData.length + ' events with Claude…</div>');
-        return claudeCalendarSummary(calendarData);
-      })
-      .catch(function(e) {
-        calendarFetching = false;
-        var msg = e.message || 'Unknown error';
-        // Helpful message for scope issues
-        if (msg.indexOf('403') > -1 || msg.indexOf('insufficientPermissions') > -1 || msg.indexOf('Calendar API returned 403') > -1) {
-          msg = 'Calendar access denied. Your refresh token may not include calendar.readonly scope. Go to Settings and update your refresh token — see setup instructions for how to add the calendar scope in OAuth Playground.';
-        }
-        setHTML('tab-content', '<div class="err-banner" style="margin:1rem;line-height:1.6;">' + esc(msg) + '</div>');
-      });
-  }
-
-  function claudeCalendarSummary(events) {
-    var now = new Date();
-    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    var tomorrow = new Date(today.getTime() + 86400000);
-
-    // Build a clear text description of each event
-    var eventLines = events.map(function(ev, i) {
-      var startRaw = ev.start && (ev.start.dateTime || ev.start.date);
-      var endRaw   = ev.end   && (ev.end.dateTime   || ev.end.date);
-      var isAllDay = !!(ev.start && ev.start.date && !ev.start.dateTime);
-      var d = startRaw ? new Date(startRaw) : null;
-      var ds = d ? new Date(d.getFullYear(), d.getMonth(), d.getDate()) : null;
-
-      var dayLabel = 'Unknown date';
-      if (ds) {
-        if (ds.getTime() === today.getTime()) dayLabel = 'TODAY';
-        else if (ds.getTime() === tomorrow.getTime()) dayLabel = 'TOMORROW';
-        else dayLabel = d.toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'});
-      }
-
-      var timeLabel = isAllDay ? 'All day' : (d ? d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : '');
-      if (!isAllDay && endRaw) timeLabel += ' - ' + new Date(endRaw).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-
-      var parts = [
-        '[' + i + '] ' + dayLabel,
-        ev.summary || 'Untitled event',
-        timeLabel,
-        ev.location ? 'Location: ' + ev.location : '',
-        ev.attendees && ev.attendees.length > 1 ? ev.attendees.length + ' attendees' : '',
-        ev.hangoutLink ? 'Has video call link' : ''
-      ].filter(Boolean);
-
-      return parts.join(' | ');
+      expanded={}; composers={}; checked={};
+      setTxt("main-sub", p.overview||"Triage complete.");
+      setTxt("b-flag", flagged.length);
+      setTxt("b-arch", archiveCandidates.length);
+      upStats(list.length, flagged.length, archiveCandidates.length);
+      renderBriefing(p.briefing||"", p.flagged||[]);
+      upChatCtx();
+      renderTab();
+      if (flagged.length) suggestTodos(flagged);
     });
+}
 
-    var todayCount = events.filter(function(ev) {
-      var d = ev.start && (ev.start.dateTime || ev.start.date);
-      if (!d) return false;
-      var ds = new Date(new Date(d).getFullYear(), new Date(d).getMonth(), new Date(d).getDate());
-      return ds.getTime() === today.getTime();
-    }).length;
+function upStats(t,f,a) {
+  setTxt("s-total", t||"—"); setTxt("s-flag", f||"—"); setTxt("s-arch", a||"—");
+}
 
-    var todayDateStr = today.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+// ── Briefing ──────────────────────────────────────────────────
+function renderBriefing(text, raw) {
+  var area = $("briefing-area");
+  if (!area || !text) return;
+  var high = (raw||[]).filter(function(f){return f.urgency==="high";}).length;
+  var med  = (raw||[]).filter(function(f){return f.urgency==="medium";}).length;
+  var low  = (raw||[]).filter(function(f){return f.urgency==="low";}).length;
+  var now  = new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+  var chips = "";
+  if (high) chips += "<span class=\"briefing-chip\">🔴 "+high+" urgent</span>";
+  if (med)  chips += "<span class=\"briefing-chip\">🟡 "+med+" medium</span>";
+  if (low)  chips += "<span class=\"briefing-chip\">🟢 "+low+" low</span>";
+  area.innerHTML =
+    "<div class=\"briefing-card\" id=\"bcard\">"+
+      "<div class=\"briefing-header\">"+
+        "<div class=\"briefing-label\"><div class=\"briefing-dot\"></div><span class=\"briefing-title\">Briefing</span></div>"+
+        "<button id=\"btn-dismiss-briefing\" class=\"briefing-dismiss\">×</button>"+
+      "</div>"+
+      "<div class=\"briefing-text\">"+esc(text)+"</div>"+
+      "<div class=\"briefing-meta\">"+chips+"<span class=\"briefing-time\">"+now+"</span></div>"+
+    "</div>";
+  var btn = $("btn-dismiss-briefing");
+  if (btn) btn.addEventListener("click", function() { area.innerHTML=""; });
+}
 
-    var prompt = 'You are a personal chief of staff. Here are calendar events for the next 7 days. Write a helpful daily briefing.
+// ── Tab switching ──────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  checked = {};
+  document.querySelectorAll(".tab").forEach(function(t) {
+    t.classList.toggle("active", t.dataset.tab === tab);
+  });
+  renderTab();
+}
 
-' +
-      'Today is ' + todayDateStr + '. There are ' + todayCount + ' events today and ' + events.length + ' total this week.
+function renderTab() {
+  if (activeTab === "todos")    { renderTodos(); return; }
+  if (activeTab === "calendar") { renderCalendar(); return; }
 
-' +
-      'Return ONLY valid JSON with NO markdown:
-' +
-      '{
-' +
-      '  "today_briefing": "2-4 warm, specific sentences about today's schedule. Mention meeting names and times. If no events today say the calendar is clear.",
-' +
-      '  "week_overview": "2-3 sentences summarizing the week ahead — key meetings, busy days, anything notable.",
-' +
-      '  "days": [{"label":"Today — Monday May 4","events":[{"time":"9:00 AM","title":"Team Standup","location":"","has_video":true,"duration":"30 min"}]}]
-' +
-      '}
-
-' +
-      'EVENTS:
-' + eventLines.join('
-');
-
-    return claudeAPI([{ role: 'user', content: prompt }], null, 1500)
-      .then(function(data) {
-        calendarFetching = false;
-        var raw = (data.content && data.content[0] && data.content[0].text || '{}')
-          .replace(/```json/g,'').replace(/```/g,'').trim();
-        var parsed;
-        try { parsed = JSON.parse(raw); } catch(e) { parsed = null; }
-        renderCalendar(events, parsed);
-      })
-      .catch(function(e) {
-        calendarFetching = false;
-        // Still render events even if Claude summarization fails
-        renderCalendar(events, null);
-      });
+  var list = activeTab==="flagged" ? flagged : activeTab==="archive" ? archiveCandidates : allEmails;
+  if (!list.length) {
+    setHTML("tab-body", "<div class=\"empty-wrap\"><div class=\"empty-icon\">"+(allEmails.length?"✓":"✉")+"</div>"+(allEmails.length?"Nothing here.":"Run triage first.")+"</div>");
+    return;
   }
 
-  function renderCalendar(events, summary) {
-    var now = new Date();
-    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    var tomorrow = new Date(today.getTime() + 86400000);
-
-    var html = '';
-
-    // ── AI Briefing cards ──────────────────────────────────
-    if (summary) {
-      // Today card
-      if (summary.today_briefing) {
-        var todayEvents = events.filter(function(ev) {
-          var d = ev.start && (ev.start.dateTime || ev.start.date);
-          if (!d) return false;
-          var ds = new Date(d); ds = new Date(ds.getFullYear(), ds.getMonth(), ds.getDate());
-          return ds.getTime() === today.getTime();
-        });
-        html += '<div class="briefing-card" style="margin-bottom:12px;">';
-        html +=   '<div class="briefing-header"><div class="briefing-label"><div class="briefing-dot"></div>' +
-                  '<span class="briefing-title">Today — ' + today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}) + '</span></div></div>';
-        html +=   '<div class="briefing-text">' + esc(summary.today_briefing) + '</div>';
-        if (todayEvents.length) {
-          html += '<div class="briefing-meta"><span class="briefing-chip">📅 ' + todayEvents.length + ' event' + (todayEvents.length!==1?'s':'') + '</span>' +
-                  '<span class="briefing-time">' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + '</span></div>';
-        }
-        html += '</div>';
-      }
-      // Week overview card
-      if (summary.week_overview) {
-        html += '<div class="card" style="margin-bottom:12px;border-left:3px solid var(--blue-mid);">';
-        html +=   '<div class="card-label" style="margin-bottom:8px;">Week ahead</div>';
-        html +=   '<div style="font-size:var(--fs-sm);color:var(--text-2);line-height:1.65;">' + esc(summary.week_overview) + '</div>';
-        html += '</div>';
+  var html = "";
+  if (list.length > 1) {
+    html += "<div class=\"bulk-bar\"><input type=\"checkbox\" id=\"cb-all\" style=\"width:18px;height:18px;accent-color:#0d2b6e;cursor:pointer;\"> "+
+            "<label for=\"cb-all\" style=\"cursor:pointer;user-select:none;\">Select all "+list.length+"</label>"+
+            "<div style=\"flex:1\"></div>"+
+            "<button id=\"btn-archive-sel\" class=\"btn btn-red btn-sm\">Archive selected</button></div>";
+  }
+  html += "<div style=\"display:flex;flex-direction:column;gap:8px;\">";
+  list.forEach(function(em) {
+    var isExp = !!expanded[em.id];
+    var isSel = !!checked[em.id];
+    var cls = activeTab==="flagged"?"flagged":activeTab==="archive"?"archv":"";
+    var ini = avatarIni(em.from);
+    var dot = em.urgency?"<span class=\"udot "+em.urgency+"\"></span>":"";
+    html += "<div class=\"ecard "+cls+"\" id=\"card-"+em.id+"\">"+
+      "<div class=\"erow\" id=\"row-"+em.id+"\">"+
+        "<input type=\"checkbox\" class=\"ecb\" id=\"chk-"+em.id+"\" "+(isSel?"checked":"")+
+          " style=\"width:18px;height:18px;accent-color:#0d2b6e;cursor:pointer;\">"+
+        "<div class=\"eavatar\">"+esc(ini)+"</div>"+
+        "<div class=\"emeta\">"+
+          "<div class=\"etop\">"+
+            "<span class=\"efrom\">"+esc(sndrName(em.from))+"</span>"+
+            "<span class=\"esubj\">"+esc(em.subject)+"</span>"+
+            "<span class=\"edate\">"+fmtDate(em.date)+"</span>"+
+          "</div>"+
+          "<div class=\"esnip\">"+esc(em.snippet)+"</div>"+
+          (em.reason?"<span class=\"etag "+(activeTab==="archive"?"amber":"red")+"\">"+dot+esc(em.reason)+"</span>":"")+
+        "</div>"+
+      "</div>";
+    if (isExp) {
+      html += "<div class=\"eexpanded\">";
+      if (em.summary) html += "<div class=\"esummary\">"+esc(em.summary)+"</div>";
+      if (em.fullBody) html += "<div class=\"efullbody\">"+esc(em.fullBody)+"</div>";
+      html += "<div class=\"eactions\">";
+      if (activeTab!=="archive") html += "<button class=\"btn btn-blue btn-sm\" id=\"open-cmp-"+em.id+"\">Draft reply</button>";
+      html += "<button class=\"btn btn-red btn-sm\" id=\"arch-one-"+em.id+"\">Archive</button>";
+      if (!em.fullBody) html += "<button class=\"btn btn-sm\" id=\"load-full-"+em.id+"\">Load full email</button>";
+      html += "</div></div>";
+      if (composers[em.id]) {
+        html += "<div class=\"composer\">"+
+          "<div class=\"clbl\">Reply to "+esc(sndrName(em.from))+"</div>"+
+          "<div class=\"cinstr\">"+
+            "<input type=\"text\" id=\"instr-"+em.id+"\" placeholder=\"Instructions: decline politely, ask for ETA…\">"+
+            "<button class=\"btn btn-blue btn-sm\" id=\"gen-"+em.id+"\">Generate</button>"+
+          "</div>"+
+          "<textarea class=\"rta\" id=\"rta-"+em.id+"\" placeholder=\"Generated reply — edit before sending…\"></textarea>"+
+          "<div class=\"cfooter\">"+
+            "<button class=\"btn btn-sm\" id=\"cancel-cmp-"+em.id+"\">Cancel</button>"+
+            "<button class=\"btn btn-green btn-sm\" id=\"send-"+em.id+"\">Send reply</button>"+
+          "</div>"+
+        "</div>";
       }
     }
+    html += "</div>";
+  });
+  html += "</div>";
+  setHTML("tab-body", html);
 
-    // ── Group events by day ────────────────────────────────
-    var days = {};
-    var dayOrder = [];
-    events.forEach(function(ev) {
-      var start = ev.start && (ev.start.dateTime || ev.start.date);
-      if (!start) return;
-      var d = new Date(start);
-      var key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-      if (!days[key]) { days[key] = []; dayOrder.push(key); }
-      days[key].push(ev);
+  // Wire events for rendered elements
+  list.forEach(function(em) {
+    var row = $("row-"+em.id);
+    if (row) row.addEventListener("click", function(e) {
+      if (e.target.type==="checkbox") return;
+      expanded[em.id] = !expanded[em.id];
+      if (!expanded[em.id]) delete composers[em.id];
+      renderTab();
     });
+    var chk = $("chk-"+em.id);
+    if (chk) chk.addEventListener("change", function() { checked[em.id]=chk.checked; });
+    addClick("arch-one-"+em.id, function() { archiveOne(em.id); });
+    addClick("load-full-"+em.id, function() { loadFull(em); });
+    addClick("open-cmp-"+em.id, function() { composers[em.id]=true; renderTab(); });
+    addClick("cancel-cmp-"+em.id, function() { delete composers[em.id]; renderTab(); });
+    addClick("gen-"+em.id, function() { genReply(em); });
+    addClick("send-"+em.id, function() { sendReply(em); });
+  });
 
-    dayOrder.forEach(function(key) {
-      var dayDate = new Date(key);
-      var isToday    = key === today.getTime();
-      var isTomorrow = key === tomorrow.getTime();
-      var dayLabel = isToday ? 'Today'
-        : isTomorrow ? 'Tomorrow'
-        : dayDate.toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'});
-
-      html += '<div style="margin-bottom:18px;">';
-      html +=   '<div style="font-size:var(--fs-xs);font-weight:700;letter-spacing:0.07em;text-transform:uppercase;' +
-                'color:' + (isToday ? 'var(--navy)' : 'var(--text-3)') + ';margin-bottom:8px;' +
-                (isToday ? 'font-size:13px;' : '') + '">' + esc(dayLabel) + '</div>';
-      html +=   '<div style="display:flex;flex-direction:column;gap:7px;">';
-
-      days[key].forEach(function(ev) {
-        var startRaw = ev.start && (ev.start.dateTime || ev.start.date);
-        var endRaw   = ev.end   && (ev.end.dateTime   || ev.end.date);
-        var isAllDay = !!(ev.start && ev.start.date && !ev.start.dateTime);
-        var startD = startRaw ? new Date(startRaw) : null;
-        var endD   = endRaw   ? new Date(endRaw)   : null;
-
-        var timeStr = isAllDay ? 'All day'
-          : startD ? startD.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : '';
-        if (!isAllDay && endD) {
-          // Calculate duration
-          var durMs = endD - startD;
-          var durMins = Math.round(durMs / 60000);
-          var durStr = durMins < 60 ? durMins + ' min'
-            : durMins === 60 ? '1 hr'
-            : (durMins / 60).toFixed(1).replace(/\.0$/,'') + ' hrs';
-          timeStr += ' · ' + durStr;
-        }
-
-        var hasVideo = !!(ev.hangoutLink || (ev.conferenceData) ||
-          (ev.description && (ev.description.indexOf('meet.google') > -1 || ev.description.indexOf('zoom.us') > -1)));
-        var attendeeCount = ev.attendees ? ev.attendees.filter(function(a) { return a.responseStatus !== 'declined'; }).length : 0;
-
-        html += '<div class="ecard" style="' + (isToday ? 'border-left:3px solid var(--blue-mid);' : '') + '">';
-        html +=   '<div class="erow" style="cursor:default;padding:13px 15px;">';
-        // Time column
-        html +=   '<div style="min-width:52px;flex-shrink:0;">';
-        if (isAllDay) {
-          html += '<div style="font-size:11px;font-weight:600;color:var(--blue-mid);text-transform:uppercase;">All day</div>';
-        } else if (startD) {
-          html += '<div style="font-size:var(--fs-sm);font-weight:700;color:' + (isToday ? 'var(--navy)' : 'var(--text-2)') + ';">' +
-                  startD.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + '</div>';
-          if (endD) html += '<div style="font-size:11px;color:var(--text-3);">' + endD.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + '</div>';
-        }
-        html +=   '</div>';
-        // Divider dot
-        html +=   '<div style="width:8px;height:8px;border-radius:50%;background:' +
-                  (isToday ? 'var(--blue-mid)' : 'var(--border-md)') +
-                  ';flex-shrink:0;margin-top:5px;"></div>';
-        // Content
-        html +=   '<div style="flex:1;min-width:0;">';
-        html +=     '<div style="font-size:var(--fs-md);font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px;">' + esc(ev.summary || 'Untitled') + '</div>';
-        var meta = [];
-        if (ev.location) meta.push('📍 ' + ev.location);
-        if (attendeeCount > 1) meta.push('👥 ' + attendeeCount + ' people');
-        if (hasVideo) meta.push('📹 Video call');
-        if (meta.length) html += '<div style="font-size:var(--fs-xs);color:var(--text-3);line-height:1.6;">' + esc(meta.join('  ·  ')) + '</div>';
-        html +=   '</div>';
-        html +=   '</div>';
-        html += '</div>';
-      });
-
-      html += '  </div>';
-      html += '</div>';
-    });
-
-    // Refresh button at bottom
-    html += '<div style="text-align:center;padding:1rem 0;">' +
-            '<button id="btn-cal-refresh" class="btn btn-sm">↻ Refresh calendar</button></div>';
-
-    el('tab-content').innerHTML = html;
-
-    // Wire refresh button
-    var refreshBtn = document.getElementById('btn-cal-refresh');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', function() {
-        calendarFetching = false;
-        runCalendar();
-      });
-    }
-  }
-
-  // ── Briefing card ────────────────────────────────────────
-  function renderBriefing(text, flaggedRaw) {
-    var area = el('briefing-area');
-    if (!area || !text) return;
-    var high = (flaggedRaw || []).filter(function(f) { return f.urgency === 'high'; }).length;
-    var med  = (flaggedRaw || []).filter(function(f) { return f.urgency === 'medium'; }).length;
-    var low  = (flaggedRaw || []).filter(function(f) { return f.urgency === 'low'; }).length;
-    var now  = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    var chips = '';
-    if (high) chips += '<span class="briefing-chip"><span style="width:5px;height:5px;border-radius:50%;background:#fff;display:inline-block;opacity:0.9;"></span>' + high + ' urgent</span>';
-    if (med)  chips += '<span class="briefing-chip">' + med + ' medium</span>';
-    if (low)  chips += '<span class="briefing-chip">' + low + ' low</span>';
-    area.innerHTML = '<div class="briefing-card" id="briefing-card">' +
-      '<div class="briefing-header">' +
-        '<div class="briefing-label"><div class="briefing-dot"></div><span class="briefing-title">Briefing</span></div>' +
-        '<button id="btn-dismiss-briefing" class="briefing-dismiss" aria-label="Dismiss">×</button>' +
-      '</div>' +
-      '<div class="briefing-text">' + esc(text) + '</div>' +
-      '<div class="briefing-meta">' + chips + '<span class="briefing-time">Updated ' + now + '</span></div>' +
-    '</div>';
-    on('btn-dismiss-briefing', 'click', function() {
-      var card = el('briefing-card');
-      if (card && card.parentNode) card.parentNode.innerHTML = '';
-    });
-  }
-
-  // ── Tab rendering ────────────────────────────────────────
-  function swTab(tab) {
-    activeTab = tab;
-    selected = {};
-    ['flagged','archive','all','todos','calendar'].forEach(function(t) {
-      var e = el('tab-' + t);
-      if (e) e.classList.toggle('active', t === tab);
-    });
+  var cbAll = $("cb-all");
+  if (cbAll) cbAll.addEventListener("change", function() {
+    list.forEach(function(e) { checked[e.id]=cbAll.checked; });
     renderTab();
+  });
+  addClick("btn-archive-sel", archiveSelected);
+}
+
+function addClick(id, fn) {
+  var e = $(id); if (e) e.addEventListener("click", fn);
+}
+
+// ── Email actions ──────────────────────────────────────────────
+function loadFull(em) {
+  gmailFetch("/messages/"+em.id+"?format=full").then(function(d) {
+    em.fullBody = extractBody(d.payload) || "(No plain text)";
+    renderTab();
+  }).catch(function(e) { toast("Load failed: "+e.message,"error"); });
+}
+
+function extractBody(p) {
+  if (!p) return "";
+  if (p.body && p.body.data) { try { return atob(p.body.data.replace(/-/g,"+").replace(/_/g,"/")); } catch(e){return "";} }
+  if (p.parts) {
+    for (var i=0;i<p.parts.length;i++) {
+      if (p.parts[i].mimeType==="text/plain" && p.parts[i].body && p.parts[i].body.data)
+        try { return atob(p.parts[i].body.data.replace(/-/g,"+").replace(/_/g,"/")); } catch(e){}
+    }
+    for (var j=0;j<p.parts.length;j++) { var r=extractBody(p.parts[j]); if(r) return r; }
   }
+  return "";
+}
 
-  function renderTab() {
-    if (activeTab === 'todos') { renderTodos(); return; }
-    if (activeTab === 'calendar') { calendarFetching = false; runCalendar(); return; }
-    var list = results[activeTab] || [];
-    if (!list.length) {
-      setHTML('tab-content', '<div class="empty-wrap"><div class="empty-icon">' + (results.all.length ? '✓' : '✉') + '</div>' + (results.all.length ? 'Nothing here.' : 'Run triage to load your inbox.') + '</div>');
-      return;
-    }
-    var html = '';
-    if (list.length > 1) {
-      html += '<div class="bulk-bar"><input type="checkbox" id="cb-select-all" style="width:18px;height:18px;accent-color:#0d2b6e;cursor:pointer;"><label for="cb-select-all" style="margin-left:4px;">Select all ' + list.length + '</label><div style="flex:1"></div><button id="btn-archive-sel" class="btn btn-red btn-sm">Archive selected</button></div>';
-    }
-    html += '<div class="email-list">';
-    list.forEach(function(email) {
-      var isExp = !!expanded[email.id];
-      var isSel = !!selected[email.id];
-      var cls = activeTab === 'flagged' ? 'flagged' : activeTab === 'archive' ? 'archv' : '';
-      var ini = avatarIni(email.from);
-      var urgDot = email.urgency ? '<span class="udot ' + email.urgency + '"></span>' : '';
-      html += '<div class="ecard ' + cls + '" id="ec-' + email.id + '">';
-      html +=   '<div class="erow" id="erow-' + email.id + '">';
-      html +=     '<input type="checkbox" class="ecb" id="ecb-' + email.id + '" ' + (isSel ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:#0d2b6e;">';
-      html +=     '<div class="eavatar">' + esc(ini) + '</div>';
-      html +=     '<div class="emeta">';
-      html +=       '<div class="etop"><span class="efrom">' + esc(senderName(email.from)) + '</span><span class="esubj">' + esc(email.subject) + '</span><span class="edate">' + fmtDate(email.date) + '</span></div>';
-      html +=       '<div class="esnip">' + esc(email.snippet) + '</div>';
-      if (email.triageReason) html += '<span class="etag ' + (activeTab === 'archive' ? 'amber' : 'red') + '">' + urgDot + esc(email.triageReason) + '</span>';
-      html +=     '</div>';
-      html +=   '</div>';
-      if (isExp) {
-        html += '<div class="eexpanded">';
-        if (email.triageSummary) html += '<div class="esummary">' + esc(email.triageSummary) + '</div>';
-        if (email.fullBody) html += '<div class="efullbody">' + esc(email.fullBody) + '</div>';
-        html += '<div class="eactions">';
-        if (activeTab !== 'archive') html += '<button class="btn btn-blue btn-sm" id="open-compose-' + email.id + '">Draft reply</button>';
-        html += '<button class="btn btn-red btn-sm" id="arch-one-' + email.id + '">Archive</button>';
-        if (!email.fullBody) html += '<button class="btn btn-sm" id="load-full-' + email.id + '">Load full email</button>';
-        html += '</div></div>';
-        if (composers[email.id]) {
-          html += '<div class="composer">';
-          html +=   '<div class="clbl">Reply to ' + esc(senderName(email.from)) + '</div>';
-          html +=   '<div class="cinstr"><input type="text" id="instr-' + email.id + '" placeholder="Instructions: decline politely, ask for timeline…"><button class="btn btn-blue btn-sm" id="gen-reply-' + email.id + '">Generate</button></div>';
-          html +=   '<textarea class="rta" id="rta-' + email.id + '" placeholder="Generated reply will appear here — edit before sending…"></textarea>';
-          html +=   '<div class="cfooter"><button class="btn btn-sm" id="cancel-compose-' + email.id + '">Cancel</button><button class="btn btn-green btn-sm" id="send-reply-' + email.id + '">Send reply</button></div>';
-          html += '</div>';
-        }
-      }
-      html += '</div>';
-    });
-    html += '</div>';
-    el('tab-content').innerHTML = html;
+function genReply(em) {
+  var rta=$("rta-"+em.id); if (!rta) return;
+  var instr=getVal("instr-"+em.id);
+  rta.value="Generating…"; rta.disabled=true;
+  claude([{role:"user",content:"Write a professional concise reply.\n\nFrom: "+em.from+"\nSubject: "+em.subject+"\nContent: "+(em.fullBody||em.snippet)+"\n"+(instr?"Instructions: "+instr:"Auto-generate appropriate reply.")+"\n\nReply body only."}], null, 600)
+    .then(function(d){rta.value=claudeText(d)||"Could not generate.";rta.disabled=false;})
+    .catch(function(e){rta.value="Error: "+e.message;rta.disabled=false;});
+}
 
-    // Wire events after render
-    list.forEach(function(email) {
-      // Row expand toggle
-      var row = el('erow-' + email.id);
-      if (row) {
-        row.addEventListener('click', function(e) {
-          if (e.target.type === 'checkbox') return;
-          expanded[email.id] = !expanded[email.id];
-          if (!expanded[email.id]) delete composers[email.id];
-          renderTab();
-        });
-      }
-      // Checkbox
-      var cb = el('ecb-' + email.id);
-      if (cb) cb.addEventListener('change', function() { selected[email.id] = cb.checked; });
-      // Action buttons
-      var archOne = el('arch-one-' + email.id);
-      if (archOne) archOne.addEventListener('click', function(e) { e.stopPropagation(); archiveOne(email.id); });
-      var loadFull = el('load-full-' + email.id);
-      if (loadFull) loadFull.addEventListener('click', function(e) { e.stopPropagation(); loadFullEmail(email); });
-      var openCompose = el('open-compose-' + email.id);
-      if (openCompose) openCompose.addEventListener('click', function(e) { e.stopPropagation(); composers[email.id] = true; renderTab(); });
-      var cancelCompose = el('cancel-compose-' + email.id);
-      if (cancelCompose) cancelCompose.addEventListener('click', function(e) { e.stopPropagation(); delete composers[email.id]; renderTab(); });
-      var genReplyBtn = el('gen-reply-' + email.id);
-      if (genReplyBtn) genReplyBtn.addEventListener('click', function(e) { e.stopPropagation(); genReply(email); });
-      var sendReplyBtn = el('send-reply-' + email.id);
-      if (sendReplyBtn) sendReplyBtn.addEventListener('click', function(e) { e.stopPropagation(); sendReply(email); });
-    });
-
-    // Bulk bar
-    var selAll = el('cb-select-all');
-    if (selAll) selAll.addEventListener('change', function() {
-      list.forEach(function(e) { selected[e.id] = selAll.checked; });
+function sendReply(em) {
+  var rta=$("rta-"+em.id); if (!rta||!rta.value.trim()) {toast("Reply is empty","error");return;}
+  var to=extractEmail(em.from);
+  var subj=em.subject.indexOf("Re:")==0?em.subject:"Re: "+em.subject;
+  var raw=btoa(unescape(encodeURIComponent("To: "+to+"\r\nSubject: "+subj+"\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n"+rta.value))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  var body={raw:raw};
+  if (em.threadId) body.threadId=em.threadId;
+  gmailFetch("/messages/send",{method:"POST",body:JSON.stringify(body)})
+    .then(function(){
+      toast("Reply sent to "+to,"success");
+      delete composers[em.id];
+      actioned++; setTxt("s-act",actioned);
+      todos.forEach(function(t){if(t.emailId===em.id&&!t.done){t.done=true;t.completedAt=Date.now();}});
+      saveTodos(); upTodoBadge();
       renderTab();
-    });
-    var archSel = el('btn-archive-sel');
-    if (archSel) archSel.addEventListener('click', archiveSelected);
-  }
+    })
+    .catch(function(e){toast("Send failed: "+e.message,"error");});
+}
 
-  // ── Email actions ────────────────────────────────────────
-  function loadFullEmail(email) {
-    gapi('/messages/' + email.id + '?format=full').then(function(d) {
-      email.fullBody = extractBody(d.payload) || '(No plain text body)';
-      renderTab();
-    }).catch(function(e) { toast('Could not load email: ' + e.message, 'error'); });
-  }
+function archiveOne(id) {
+  gmailFetch("/messages/"+id+"/modify",{method:"POST",body:JSON.stringify({removeLabelIds:["INBOX"]})})
+    .then(function(){
+      removeEmail(id); actioned++; setTxt("s-act",actioned);
+      toast("Archived","success"); refreshBadges(); renderTab();
+    }).catch(function(e){toast("Archive failed: "+e.message,"error");});
+}
 
-  function extractBody(payload) {
-    if (!payload) return '';
-    if (payload.body && payload.body.data) {
-      try { return atob(payload.body.data.replace(/-/g,'+').replace(/_/g,'/')); } catch(e) { return ''; }
-    }
-    if (payload.parts) {
-      for (var i = 0; i < payload.parts.length; i++) {
-        var p = payload.parts[i];
-        if (p.mimeType === 'text/plain' && p.body && p.body.data) {
-          try { return atob(p.body.data.replace(/-/g,'+').replace(/_/g,'/')); } catch(e) {}
-        }
+function archiveSelected() {
+  var ids=Object.keys(checked).filter(function(id){return checked[id];});
+  if (!ids.length){toast("None selected","error");return;}
+  var done=0;
+  ids.forEach(function(id){
+    gmailFetch("/messages/"+id+"/modify",{method:"POST",body:JSON.stringify({removeLabelIds:["INBOX"]})})
+      .then(function(){removeEmail(id);done++;actioned++;if(done===ids.length){setTxt("s-act",actioned);toast("Archived "+done,"success");checked={};refreshBadges();renderTab();}})
+      .catch(function(){done++;if(done===ids.length){refreshBadges();renderTab();}});
+  });
+}
+
+function removeEmail(id) {
+  flagged=flagged.filter(function(e){return e.id!==id;});
+  archiveCandidates=archiveCandidates.filter(function(e){return e.id!==id;});
+  allEmails=allEmails.filter(function(e){return e.id!==id;});
+  delete expanded[id]; delete composers[id]; delete checked[id];
+}
+
+function refreshBadges() {
+  upStats(allEmails.length,flagged.length,archiveCandidates.length);
+  setTxt("b-flag",flagged.length); setTxt("b-arch",archiveCandidates.length);
+}
+
+// ── Todos ──────────────────────────────────────────────────────
+function mkId(){return "t"+Date.now()+Math.random().toString(36).slice(2,6);}
+
+function addTodo(text,emailId,emailSubject,emailFrom) {
+  todos.unshift({id:mkId(),text:text,emailId:emailId||null,emailSubject:emailSubject||null,emailFrom:emailFrom||null,done:false,createdAt:Date.now()});
+  saveTodos(); upTodoBadge();
+}
+
+function upTodoBadge(){setTxt("b-todo",todos.filter(function(t){return !t.done;}).length);}
+
+function suggestTodos(fl) {
+  if (!fl.length||!cfg.akey) return;
+  var lines=fl.map(function(e,i){return "["+i+"] FROM: "+e.from+"\nSUBJECT: "+e.subject+"\nSUMMARY: "+(e.summary||e.snippet);}).join("\n\n");
+  claude([{role:"user",content:"Extract concrete action items from these emails. Only where action is clearly needed. Return ONLY valid JSON:\n{\"todos\":[{\"emailIndex\":0,\"action\":\"specific action\",\"priority\":\"high|medium|low\"}]}\n\nEMAILS:\n"+lines}], null, 800)
+    .then(function(data){
+      var raw=claudeText(data).replace(/```json|```/g,"").trim();
+      var p; try{p=JSON.parse(raw);}catch(e){p={todos:[]};}
+      pendingSuggestions=(p.todos||[]).map(function(t){
+        var em=fl[t.emailIndex]; if(!em) return null;
+        return {id:mkId(),action:t.action,email:em,state:"pending"};
+      }).filter(Boolean);
+      if (pendingSuggestions.length&&activeTab==="todos") renderTodos();
+      upTodoBadge();
+    }).catch(function(){});
+}
+
+function renderTodos() {
+  var open=todos.filter(function(t){return !t.done;});
+  var done=todos.filter(function(t){return t.done;});
+  var hasPending=pendingSuggestions.some(function(s){return s.state==="pending";});
+  var html="";
+
+  if (pendingSuggestions.length) {
+    html+="<div class=\"todo-suggest-banner\">"+
+      "<div class=\"todo-suggest-hdr\"><div class=\"todo-suggest-dot\"></div><div class=\"todo-suggest-title\">Claude suggestions</div></div>"+
+      "<div class=\"todo-suggest-sub\">Review action items from your triage.</div>"+
+      "<div class=\"todo-suggest-list\">";
+    pendingSuggestions.forEach(function(s){
+      var cls=s.state==="declined"?"declined":s.state==="accepted"?"accepted":"";
+      html+="<div class=\"todo-suggest-item "+cls+"\">"+
+        "<div class=\"todo-suggest-body\"><div class=\"todo-suggest-text\">"+esc(s.action)+"</div>"+
+        "<div class=\"todo-suggest-src\">"+esc(sndrName(s.email.from))+" — "+esc(s.email.subject)+"</div></div>";
+      if (s.state==="pending") {
+        html+="<div class=\"todo-suggest-btns\">"+
+          "<button class=\"btn btn-green btn-xs\" id=\"sug-acc-"+s.id+"\">Accept</button>"+
+          "<button class=\"btn btn-red btn-xs\" id=\"sug-dec-"+s.id+"\">Decline</button></div>";
+      } else {
+        html+="<div style=\"font-size:14px;padding:4px;color:"+(s.state==="accepted"?"#27ae60":"#aaa")+";\">"+( s.state==="accepted"?"✓":"✕")+"</div>";
       }
-      for (var j = 0; j < payload.parts.length; j++) {
-        var r = extractBody(payload.parts[j]);
-        if (r) return r;
-      }
-    }
-    return '';
-  }
-
-  function genReply(email) {
-    var rta = el('rta-' + email.id);
-    var instr = val('instr-' + email.id);
-    if (!rta) return;
-    rta.value = 'Generating…'; rta.disabled = true;
-    var prompt = 'Write a professional, concise email reply.\n\nFrom: ' + email.from + '\nSubject: ' + email.subject + '\nContent: ' + (email.fullBody || email.snippet) + '\n' + (instr ? 'Instructions: ' + instr : 'Write an appropriate reply.') + '\n\nOutput only the reply body.';
-    claudeAPI([{ role: 'user', content: prompt }], null, 600)
-      .then(function(d) { rta.value = (d.content && d.content[0] && d.content[0].text) || 'Could not generate.'; rta.disabled = false; })
-      .catch(function(e) { rta.value = 'Error: ' + e.message; rta.disabled = false; });
-  }
-
-  function sendReply(email) {
-    var rta = el('rta-' + email.id);
-    if (!rta || !rta.value.trim()) { toast('Reply is empty', 'error'); return; }
-    var toAddr = extractEmail(email.from);
-    var subj = email.subject.indexOf('Re:') === 0 ? email.subject : 'Re: ' + email.subject;
-    var raw = btoa(unescape(encodeURIComponent('To: ' + toAddr + '\r\nSubject: ' + subj + '\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n' + rta.value)))
-      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-    var body = { raw: raw };
-    if (email.threadId) body.threadId = email.threadId;
-    gapi('/messages/send', { method: 'POST', body: JSON.stringify(body) })
-      .then(function() {
-        toast('Reply sent to ' + toAddr, 'success');
-        delete composers[email.id];
-        actioned++;
-        txt('st-act', actioned);
-        completeTodosByEmail(email.id);
-        renderTab();
-      })
-      .catch(function(e) { toast('Send failed: ' + e.message, 'error'); });
-  }
-
-  function archiveOne(emailId) {
-    gapi('/messages/' + emailId + '/modify', { method: 'POST', body: JSON.stringify({ removeLabelIds: ['INBOX'] }) })
-      .then(function() {
-        removeEmail(emailId); actioned++;
-        txt('st-act', actioned);
-        toast('Archived', 'success');
-        refreshBadges(); renderTab();
-      })
-      .catch(function(e) { toast('Archive failed: ' + e.message, 'error'); });
-  }
-
-  function archiveSelected() {
-    var ids = Object.keys(selected).filter(function(id) { return selected[id]; });
-    if (!ids.length) { toast('No emails selected', 'error'); return; }
-    var done = 0;
-    var total = ids.length;
-    ids.forEach(function(id) {
-      gapi('/messages/' + id + '/modify', { method: 'POST', body: JSON.stringify({ removeLabelIds: ['INBOX'] }) })
-        .then(function() { removeEmail(id); done++; actioned++; if (done === total) { txt('st-act', actioned); toast('Archived ' + done + ' emails', 'success'); selected = {}; refreshBadges(); renderTab(); } })
-        .catch(function() { done++; if (done === total) { txt('st-act', actioned); refreshBadges(); renderTab(); } });
+      html+="</div>";
     });
+    html+="</div><div class=\"todo-suggest-footer\">";
+    if (hasPending) html+="<button class=\"btn btn-green btn-sm\" id=\"sug-all-acc\">Accept all</button><button class=\"btn btn-sm\" id=\"sug-all-dec\">Decline all</button>";
+    html+="<button class=\"btn btn-ghost btn-sm\" id=\"sug-dismiss\">Dismiss</button></div></div>";
   }
 
-  function removeEmail(id) {
-    results.flagged = results.flagged.filter(function(e) { return e.id !== id; });
-    results.archive = results.archive.filter(function(e) { return e.id !== id; });
-    results.all     = results.all.filter(function(e) { return e.id !== id; });
-    delete expanded[id]; delete composers[id]; delete selected[id];
-  }
+  html+="<div class=\"todo-add-row\"><input type=\"text\" class=\"todo-add-input\" id=\"todo-inp\" placeholder=\"Add to-do manually…\"><button class=\"btn btn-sm\" id=\"todo-add\">Add</button></div>";
 
-  function refreshBadges() {
-    upStats(results.all.length, results.flagged.length, results.archive.length);
-    txt('b-f', results.flagged.length);
-    txt('b-a', results.archive.length);
-  }
-
-  // ── Todos ────────────────────────────────────────────────
-  function loadTodos() {
-    try { todos = JSON.parse(localStorage.getItem('iz_todos') || '[]'); } catch(e) { todos = []; }
-    upTodoBadge();
-  }
-
-  function saveTodos() {
-    try { localStorage.setItem('iz_todos', JSON.stringify(todos)); } catch(e) {}
-    upTodoBadge();
-  }
-
-  function upTodoBadge() { txt('b-td', todos.filter(function(t) { return !t.done; }).length); }
-
-  function mkTodoId() { return 'td_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
-
-  function addTodo(text, emailId, emailSubject, emailFrom) {
-    todos.unshift({ id: mkTodoId(), text: text, emailId: emailId || null, emailSubject: emailSubject || null, emailFrom: emailFrom || null, done: false, createdAt: Date.now() });
-    saveTodos();
-  }
-
-  function completeTodosByEmail(emailId) {
-    todos.forEach(function(t) { if (t.emailId === emailId && !t.done) { t.done = true; t.completedAt = Date.now(); } });
-    saveTodos();
-  }
-
-  function suggestTodos(flaggedEmails) {
-    if (!flaggedEmails.length || !cfg.akey) return;
-    var emailData = flaggedEmails.map(function(e, i) {
-      return '[' + i + '] FROM: ' + e.from + '\nSUBJECT: ' + e.subject + '\nSUMMARY: ' + (e.triageSummary || e.snippet) + '\nURGENCY: ' + (e.urgency || 'medium');
-    }).join('\n\n');
-    claudeAPI([{ role: 'user', content: 'Extract concrete action items from these flagged emails. Only suggest todos where a specific action is clearly needed. Return ONLY valid JSON:\n{"todos":[{"emailIndex":0,"action":"specific action","priority":"high|medium|low"}]}\n\nEMAILS:\n' + emailData }], null, 800)
-      .then(function(data) {
-        var raw = (data.content && data.content[0] && data.content[0].text || '{}').replace(/```json|```/g,'').trim();
-        var parsed; try { parsed = JSON.parse(raw); } catch(e) { parsed = { todos: [] }; }
-        pendingSuggestions = (parsed.todos || []).map(function(t) {
-          var email = flaggedEmails[t.emailIndex];
-          if (!email) return null;
-          return { id: mkTodoId(), action: t.action, email: email, priority: t.priority || 'medium', state: 'pending' };
-        }).filter(Boolean);
-        if (pendingSuggestions.length && activeTab === 'todos') renderTodos();
-        upTodoBadge();
-      })
-      .catch(function() {});
-  }
-
-  function renderTodos() {
-    var open = todos.filter(function(t) { return !t.done; });
-    var done = todos.filter(function(t) { return t.done; });
-    var hasPending = pendingSuggestions.some(function(s) { return s.state === 'pending'; });
-    var html = '';
-
-    // Suggestions banner
-    if (pendingSuggestions.length) {
-      html += '<div class="todo-suggest-banner">';
-      html +=   '<div class="todo-suggest-hdr"><div class="todo-suggest-dot"></div><div class="todo-suggest-title">Claude suggestions</div></div>';
-      html +=   '<div class="todo-suggest-sub">Review action items from your latest triage. Accept or decline each.</div>';
-      html +=   '<div class="todo-suggest-list">';
-      pendingSuggestions.forEach(function(s) {
-        var cls = s.state === 'declined' ? 'declined' : s.state === 'accepted' ? 'accepted' : '';
-        html += '<div class="todo-suggest-item ' + cls + '">';
-        html +=   '<div class="todo-suggest-body"><div class="todo-suggest-text">' + esc(s.action) + '</div><div class="todo-suggest-src">From: ' + esc(senderName(s.email.from)) + ' — ' + esc(s.email.subject) + '</div></div>';
-        if (s.state === 'pending') {
-          html += '<div class="todo-suggest-btns"><button class="btn btn-green btn-xs" id="accept-sug-' + s.id + '">Accept</button><button class="btn btn-red btn-xs" id="decline-sug-' + s.id + '">Decline</button></div>';
-        } else {
-          html += '<div style="font-size:13px;color:' + (s.state==='accepted'?'#27ae60':'#8a98b8') + ';padding:4px;">' + (s.state==='accepted'?'✓':'✕') + '</div>';
-        }
-        html += '</div>';
-      });
-      html +=   '</div>';
-      html +=   '<div class="todo-suggest-footer">';
-      if (hasPending) html += '<button class="btn btn-green btn-sm" id="btn-accept-all">Accept all</button><button class="btn btn-sm" id="btn-decline-all">Decline all</button>';
-      html += '<button class="btn btn-ghost btn-sm" id="btn-dismiss-sug">Dismiss</button></div>';
-      html += '</div>';
-    }
-
-    // Add input
-    html += '<div class="todo-add-row"><input type="text" class="todo-add-input" id="todo-add-inp" placeholder="Add a to-do manually…"><button class="btn btn-sm" id="btn-add-todo">Add</button></div>';
-
-    // Open todos
-    if (open.length) {
-      html += '<div class="todo-section" style="margin-top:14px;"><div class="todo-section-hdr"><span class="todo-section-title">Open (' + open.length + ')</span></div><div class="todo-list">';
-      open.forEach(function(t) {
-        var isEditing = editingTodoId === t.id;
-        html += '<div class="todo-item">';
-        html +=   '<input type="checkbox" class="todo-cb" id="tdcb-' + t.id + '">';
-        html +=   '<div class="todo-body">';
-        if (isEditing) {
-          html += '<input type="text" class="todo-text-edit" id="tdedit-' + t.id + '" value="' + esc(t.text) + '">';
-        } else {
-          html += '<div class="todo-text">' + esc(t.text) + '</div>';
-        }
-        if (t.emailSubject) html += '<div class="todo-meta"><span class="todo-source">Re: <button class="todo-source-link" id="tdlink-' + t.id + '">' + esc(t.emailSubject) + '</button></span></div>';
-        html +=   '</div>';
-        html +=   '<div class="todo-actions">';
-        if (!isEditing) html += '<button class="btn btn-ghost btn-icon btn-xs" id="tdedit-btn-' + t.id + '" style="font-size:15px;">✎</button>';
-        html +=     '<button class="btn btn-ghost btn-icon btn-xs" id="tddel-' + t.id + '" style="font-size:18px;color:#8a98b8;">×</button>';
-        html +=   '</div>';
-        html += '</div>';
-      });
-      html += '</div></div>';
-    } else if (!pendingSuggestions.length) {
-      html += '<div class="todo-empty"><div class="todo-empty-icon">✓</div>No open to-dos</div>';
-    }
-
-    // Done todos
-    if (done.length) {
-      html += '<div class="todo-section" style="margin-top:18px;"><div class="todo-section-hdr"><span class="todo-section-title">Completed (' + done.length + ')</span><button class="btn btn-ghost btn-xs" id="btn-clear-done">Clear all</button></div><div class="todo-list">';
-      done.slice(0,20).forEach(function(t) {
-        html += '<div class="todo-item done"><input type="checkbox" class="todo-cb" id="tdcb-' + t.id + '" checked><div class="todo-body"><div class="todo-text done-text">' + esc(t.text) + '</div></div><div class="todo-actions"><button class="btn btn-ghost btn-icon btn-xs" id="tddel-' + t.id + '" style="font-size:18px;color:#8a98b8;">×</button></div></div>';
-      });
-      html += '</div></div>';
-    }
-
-    el('tab-content').innerHTML = html;
-
-    // Wire todo events
-    pendingSuggestions.forEach(function(s) {
-      on('accept-sug-' + s.id, 'click', function() { s.state = 'accepted'; addTodo(s.action, s.email.id, s.email.subject, s.email.from); renderTodos(); });
-      on('decline-sug-' + s.id, 'click', function() { s.state = 'declined'; renderTodos(); });
+  if (open.length) {
+    html+="<div class=\"todo-section\" style=\"margin-top:14px;\"><div class=\"todo-section-hdr\"><span class=\"todo-section-title\">Open ("+open.length+")</span></div><div class=\"todo-list\">";
+    open.forEach(function(t){
+      var isEd=editingTodo===t.id;
+      html+="<div class=\"todo-item\">"+
+        "<input type=\"checkbox\" class=\"todo-cb\" id=\"tdcb-"+t.id+"\">"+
+        "<div class=\"todo-body\">"+(isEd?"<input type=\"text\" class=\"todo-text-edit\" id=\"tdedit-"+t.id+"\" value=\""+esc(t.text)+"\">":"<div class=\"todo-text\">"+esc(t.text)+"</div>")+
+        (t.emailSubject?"<div class=\"todo-meta\"><span class=\"todo-source\">Re: <button class=\"todo-source-link\" id=\"tdlink-"+t.id+"\">"+esc(t.emailSubject)+"</button></span></div>":"")+
+        "</div>"+
+        "<div class=\"todo-actions\">"+(isEd?"":"<button class=\"btn btn-ghost btn-icon btn-xs\" id=\"tded-"+t.id+"\" style=\"font-size:15px;\">✎</button>")+
+        "<button class=\"btn btn-ghost btn-icon btn-xs\" id=\"tddel-"+t.id+"\" style=\"font-size:18px;color:#aaa;\">×</button></div>"+
+      "</div>";
     });
-    on('btn-accept-all', 'click', function() { pendingSuggestions.forEach(function(s) { if (s.state==='pending') { s.state='accepted'; addTodo(s.action, s.email.id, s.email.subject, s.email.from); } }); renderTodos(); });
-    on('btn-decline-all', 'click', function() { pendingSuggestions.forEach(function(s) { if (s.state==='pending') s.state='declined'; }); renderTodos(); });
-    on('btn-dismiss-sug', 'click', function() { pendingSuggestions = []; renderTodos(); });
-    on('btn-add-todo', 'click', function() { var inp = el('todo-add-inp'); if (inp && inp.value.trim()) { addTodo(inp.value.trim()); inp.value=''; renderTodos(); } });
-    var addInp = el('todo-add-inp');
-    if (addInp) addInp.addEventListener('keydown', function(e) { if (e.key==='Enter') { if (addInp.value.trim()) { addTodo(addInp.value.trim()); addInp.value=''; renderTodos(); } } });
-    on('btn-clear-done', 'click', function() { todos = todos.filter(function(t) { return !t.done; }); saveTodos(); renderTodos(); });
+    html+="</div></div>";
+  } else if (!pendingSuggestions.length) {
+    html+="<div class=\"todo-empty\"><div class=\"todo-empty-icon\">✓</div>No open to-dos</div>";
+  }
 
-    todos.forEach(function(t) {
-      var cb = el('tdcb-' + t.id);
-      if (cb) cb.addEventListener('change', function() {
-        t.done = cb.checked; if (t.done) t.completedAt = Date.now(); else delete t.completedAt;
-        saveTodos(); renderTodos();
-      });
-      on('tddel-' + t.id, 'click', function() { todos = todos.filter(function(x) { return x.id !== t.id; }); saveTodos(); renderTodos(); });
-      on('tdedit-btn-' + t.id, 'click', function() { editingTodoId = t.id; renderTodos(); setTimeout(function() { var inp = el('tdedit-' + t.id); if (inp) inp.focus(); }, 50); });
-      on('tdedit-' + t.id, 'keydown', function(e) { if (e.key==='Enter') { var inp = el('tdedit-' + t.id); if (inp && inp.value.trim()) t.text = inp.value.trim(); editingTodoId = null; saveTodos(); renderTodos(); } if (e.key==='Escape') { editingTodoId = null; renderTodos(); } });
-      on('tdlink-' + t.id, 'click', function() {
-        if (!t.emailId) return;
-        var email = results.all.find(function(e) { return e.id === t.emailId; });
-        if (!email) { toast('Email not in current inbox view', 'info'); return; }
-        swTab('flagged'); expanded[t.emailId] = true;
-        setTimeout(function() { var ec = el('ec-' + t.emailId); if (ec) ec.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
-      });
+  if (done.length) {
+    html+="<div class=\"todo-section\" style=\"margin-top:18px;\"><div class=\"todo-section-hdr\"><span class=\"todo-section-title\">Completed ("+done.length+")</span><button class=\"btn btn-ghost btn-xs\" id=\"clear-done\">Clear</button></div><div class=\"todo-list\">";
+    done.slice(0,20).forEach(function(t){
+      html+="<div class=\"todo-item done\"><input type=\"checkbox\" class=\"todo-cb\" id=\"tdcb-"+t.id+"\" checked><div class=\"todo-body\"><div class=\"todo-text done-text\">"+esc(t.text)+"</div></div><div class=\"todo-actions\"><button class=\"btn btn-ghost btn-icon btn-xs\" id=\"tddel-"+t.id+"\" style=\"font-size:18px;color:#aaa;\">×</button></div></div>";
     });
+    html+="</div></div>";
   }
 
-  // ── Chat ─────────────────────────────────────────────────
-  function toggleChat() {
-    chatOpen = !chatOpen;
-    var panel = el('chat-panel');
-    if (panel) panel.classList.toggle('open', chatOpen);
-    if (chatOpen) setTimeout(function() { var cta = el('cta'); if (cta) cta.focus(); }, 280);
-  }
+  setHTML("tab-body", html);
 
-  function clearChat() {
-    chatHistory = [];
-    setHTML('cmsgs', '<div class="cmsg assistant"><div class="cbubble">Chat cleared. How can I help?</div></div>');
-  }
+  // Wire suggestion buttons
+  pendingSuggestions.forEach(function(s){
+    addClick("sug-acc-"+s.id, function(){s.state="accepted";addTodo(s.action,s.email.id,s.email.subject,s.email.from);renderTodos();});
+    addClick("sug-dec-"+s.id, function(){s.state="declined";renderTodos();});
+  });
+  addClick("sug-all-acc", function(){pendingSuggestions.forEach(function(s){if(s.state==="pending"){s.state="accepted";addTodo(s.action,s.email.id,s.email.subject,s.email.from);}});renderTodos();});
+  addClick("sug-all-dec", function(){pendingSuggestions.forEach(function(s){if(s.state==="pending")s.state="declined";});renderTodos();});
+  addClick("sug-dismiss", function(){pendingSuggestions=[];renderTodos();});
+  addClick("todo-add", function(){var inp=$("todo-inp");if(inp&&inp.value.trim()){addTodo(inp.value.trim());inp.value="";renderTodos();}});
+  var tinp=$("todo-inp");
+  if (tinp) tinp.addEventListener("keydown",function(e){if(e.key==="Enter"&&tinp.value.trim()){addTodo(tinp.value.trim());tinp.value="";renderTodos();}});
+  addClick("clear-done", function(){todos=todos.filter(function(t){return !t.done;});saveTodos();renderTodos();});
 
-  function upChatCtx() {
-    if (results.all.length) {
-      txt('cctx-lbl', results.all.length + ' emails — ' + results.flagged.length + ' flagged, ' + results.archive.length + ' to archive');
-    } else {
-      txt('cctx-lbl', 'No inbox loaded yet');
+  todos.forEach(function(t){
+    var cb=$("tdcb-"+t.id);
+    if (cb) cb.addEventListener("change",function(){t.done=cb.checked;if(t.done)t.completedAt=Date.now();else delete t.completedAt;saveTodos();renderTodos();});
+    addClick("tddel-"+t.id,function(){todos=todos.filter(function(x){return x.id!==t.id;});saveTodos();renderTodos();});
+    addClick("tded-"+t.id,function(){editingTodo=t.id;renderTodos();setTimeout(function(){var inp=$("tdedit-"+t.id);if(inp)inp.focus();},30);});
+    var editInp=$("tdedit-"+t.id);
+    if (editInp) editInp.addEventListener("keydown",function(e){
+      if(e.key==="Enter"&&editInp.value.trim()){t.text=editInp.value.trim();editingTodo=null;saveTodos();renderTodos();}
+      if(e.key==="Escape"){editingTodo=null;renderTodos();}
+    });
+    addClick("tdlink-"+t.id,function(){
+      var em=allEmails.find?allEmails.find(function(e){return e.id===t.emailId;}):null;
+      if (!em) { toast("Email not in current view","info"); return; }
+      switchTab("flagged"); expanded[t.emailId]=true;
+      setTimeout(function(){var c=$("card-"+t.emailId);if(c)c.scrollIntoView({behavior:"smooth",block:"center"});},100);
+    });
+  });
+}
+
+// ── Calendar ──────────────────────────────────────────────────
+function renderCalendar() {
+  if (calFetching) return;
+  calFetching = true;
+  setHTML("tab-body","<div class=\"loading-wrap\"><div class=\"spinner\"></div>Fetching calendar…</div>");
+
+  var now=new Date();
+  var dayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate(),0,0,0);
+  var weekEnd=new Date(dayStart.getTime()+8*24*60*60*1000);
+  var calUrl="https://www.googleapis.com/calendar/v3/calendars/primary/events"+
+    "?timeMin="+encodeURIComponent(dayStart.toISOString())+
+    "&timeMax="+encodeURIComponent(weekEnd.toISOString())+
+    "&singleEvents=true&orderBy=startTime&maxResults=100&showDeleted=false";
+
+  getToken()
+    .then(function(){
+      return fetch(calUrl,{headers:{Authorization:"Bearer "+gmailToken,Accept:"application/json"}})
+        .then(function(r){return r.json();});
+    })
+    .then(function(data){
+      if (data.error) throw new Error(data.error.message||("Calendar error "+data.error.code));
+      var evs=(data.items||[]).filter(function(ev){return ev.status!=="cancelled";});
+      if (!evs.length){calFetching=false;setHTML("tab-body","<div class=\"empty-wrap\"><div class=\"empty-icon\">📅</div>No events this week.</div>");return;}
+      setHTML("tab-body","<div class=\"loading-wrap\"><div class=\"spinner\"></div>Summarizing "+evs.length+" events…</div>");
+      return doCalSummary(evs);
+    })
+    .catch(function(e){
+      calFetching=false;
+      var msg=e.message||"Unknown error";
+      if (msg.indexOf("403")>-1||msg.indexOf("insufficient")>-1)
+        msg="Calendar access denied (403). Your refresh token needs calendar.readonly scope. Go to Settings and re-generate your token via OAuth Playground with that scope added.";
+      setHTML("tab-body","<div class=\"err-banner\" style=\"margin:1rem;line-height:1.7;\">"+esc(msg)+"</div>");
+    });
+}
+
+function doCalSummary(evs) {
+  var today=new Date(); today.setHours(0,0,0,0);
+  var tomorrow=new Date(today.getTime()+86400000);
+  var todayStr=today.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+
+  var lines=evs.map(function(ev,i){
+    var s=ev.start&&(ev.start.dateTime||ev.start.date);
+    var e=ev.end&&(ev.end.dateTime||ev.end.date);
+    var d=s?new Date(s):null;
+    var ds=d?new Date(d.getFullYear(),d.getMonth(),d.getDate()):null;
+    var label=ds?ds.getTime()===today.getTime()?"TODAY":ds.getTime()===tomorrow.getTime()?"TOMORROW":d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}):"?";
+    var time=ev.start&&ev.start.date&&!ev.start.dateTime?"All day":(d?d.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}):"");
+    return "["+i+"] "+label+" | "+( ev.summary||"Untitled")+" | "+time+(ev.location?" | @"+ev.location:"")+(ev.attendees?" | "+ev.attendees.length+" attendees":"");
+  }).join("\n");
+
+  var prompt="You are a personal assistant. Today is "+todayStr+".\n\n"+
+    "Return ONLY valid JSON:\n"+
+    "{\"today\":\"2-4 sentences about today's events, mention names and times, warm tone. If none, say calendar is clear.\","+
+    "\"week\":\"2-3 sentences summarising the week ahead.\"}\n\nEVENTS:\n"+lines;
+
+  return claude([{role:"user",content:prompt}], null, 800)
+    .then(function(data){
+      calFetching=false;
+      var raw=claudeText(data).replace(/```json|```/g,"").trim();
+      var p; try{p=JSON.parse(raw);}catch(e){p=null;}
+      drawCalendar(evs, p);
+    })
+    .catch(function(){calFetching=false;drawCalendar(evs,null);});
+}
+
+function drawCalendar(evs, summary) {
+  var today=new Date(); today.setHours(0,0,0,0);
+  var tomorrow=new Date(today.getTime()+86400000);
+  var html="";
+
+  if (summary) {
+    if (summary.today) {
+      html+="<div class=\"briefing-card\" style=\"margin-bottom:12px;\">"+
+        "<div class=\"briefing-header\"><div class=\"briefing-label\"><div class=\"briefing-dot\"></div>"+
+        "<span class=\"briefing-title\">Today — "+today.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})+"</span></div></div>"+
+        "<div class=\"briefing-text\">"+esc(summary.today)+"</div></div>";
+    }
+    if (summary.week) {
+      html+="<div class=\"card\" style=\"margin-bottom:14px;border-left:3px solid var(--blue-mid);\">"+
+        "<div class=\"card-label\" style=\"margin-bottom:8px;\">Week ahead</div>"+
+        "<div style=\"font-size:var(--fs-sm);color:var(--text-2);line-height:1.65;\">"+esc(summary.week)+"</div></div>";
     }
   }
 
-  function buildCtx() {
-    if (!results.all.length) return 'No inbox loaded.';
-    var fl = results.flagged.map(function(e) { return '- [' + (e.urgency||'') + '] ' + e.from + ' | ' + e.subject + ' | ' + (e.triageSummary||e.snippet); }).join('\n');
-    var ar = results.archive.slice(0,10).map(function(e) { return '- ' + e.from + ' | ' + e.subject; }).join('\n');
-    return 'Inbox (' + results.all.length + ' emails):\n\nFLAGGED (' + results.flagged.length + '):\n' + (fl||'None') + '\n\nARCHIVE (' + results.archive.length + '):\n' + (ar||'None');
-  }
+  // Group by day
+  var days={}, order=[];
+  evs.forEach(function(ev){
+    var s=ev.start&&(ev.start.dateTime||ev.start.date); if(!s) return;
+    var d=new Date(s); var key=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+    if(!days[key]){days[key]=[];order.push(key);}
+    days[key].push(ev);
+  });
 
-  function appendChatMsg(role, text, thinking) {
-    var msgs = el('cmsgs');
-    if (!msgs) return;
-    var d = document.createElement('div');
-    d.className = 'cmsg ' + role;
-    d.innerHTML = '<div class="cbubble' + (thinking ? ' thinking' : '') + '">' + esc(text) + '</div>';
-    msgs.appendChild(d);
-    msgs.scrollTop = msgs.scrollHeight;
-  }
-
-  function updateLastMsg(text) {
-    var msgs = el('cmsgs');
-    if (!msgs) return;
-    var last = msgs.querySelector('.cmsg.assistant:last-child .cbubble');
-    if (last) { last.classList.remove('thinking'); last.textContent = text; }
-    msgs.scrollTop = msgs.scrollHeight;
-  }
-
-  function sendChat() {
-    if (chatBusy) return;
-    var cta = el('cta');
-    if (!cta) return;
-    var text = cta.value.trim();
-    if (!text) return;
-    if (!cfg.akey) { appendChatMsg('assistant', 'No API key — go to Settings.'); return; }
-    cta.value = ''; cta.style.height = 'auto';
-    appendChatMsg('user', text);
-    chatHistory.push({ role: 'user', content: text });
-    chatBusy = true;
-    var sendBtn = el('btn-chat-send');
-    if (sendBtn) sendBtn.disabled = true;
-    appendChatMsg('assistant', 'Thinking…', true);
-    var sys = 'You are Claude, an AI assistant inside Inbox Zero, a Gmail triage tool. Be concise and direct.\n\n' + buildCtx();
-    claudeAPI(chatHistory, sys, 1000)
-      .then(function(data) {
-        if (data.error) throw new Error(data.error.message || 'API error');
-        var reply = (data.content && data.content[0] && data.content[0].text) || 'Sorry, no response.';
-        chatHistory.push({ role: 'assistant', content: reply });
-        updateLastMsg(reply);
-      })
-      .catch(function(e) { updateLastMsg('Error: ' + e.message); chatHistory.pop(); })
-      .then(function() { chatBusy = false; if (sendBtn) sendBtn.disabled = false; });
-  }
-
-  // ── Utilities ────────────────────────────────────────────
-  function avatarIni(from) {
-    var name = senderName(from);
-    var parts = name.split(' ').filter(Boolean);
-    return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.slice(0,2).toUpperCase();
-  }
-
-  function senderName(from) {
-    var m = from.match(/^"?([^"<]+)"?\s*</);
-    return m ? m[1].trim() : from.replace(/<.*>/,'').trim() || from;
-  }
-
-  function extractEmail(from) {
-    var m = from.match(/<([^>]+)>/);
-    return m ? m[1] : from;
-  }
-
-  function fmtDate(s) {
-    if (!s) return '';
-    try {
-      var d = new Date(s), now = new Date(), diff = now - d;
-      if (diff < 86400000) return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-      if (diff < 604800000) return d.toLocaleDateString([],{weekday:'short'});
-      return d.toLocaleDateString([],{month:'short',day:'numeric'});
-    } catch(e) { return s.slice(0,10); }
-  }
-
-  // ── Init ─────────────────────────────────────────────────
-  function wireBtn(id, fn) {
-    // Attach both click and touchend for maximum iOS/desktop compatibility.
-    // touchend fires before click on iOS so we use a flag to avoid double-firing.
-    var e = document.getElementById(id);
-    if (!e) return;
-    var fired = false;
-    e.addEventListener('touchend', function(ev) {
-      ev.preventDefault(); // prevent the ghost click on iOS
-      fired = true;
-      fn();
-      setTimeout(function() { fired = false; }, 400);
-    }, { passive: false });
-    e.addEventListener('click', function() {
-      if (!fired) fn();
+  order.forEach(function(key){
+    var dd=new Date(key);
+    var isToday=key===today.getTime(), isTomorrow=key===tomorrow.getTime();
+    var label=isToday?"Today":isTomorrow?"Tomorrow":dd.toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"});
+    html+="<div style=\"margin-bottom:20px;\">"+
+      "<div style=\"font-size:var(--fs-xs);font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:"+(isToday?"var(--navy)":"var(--text-3)")+";margin-bottom:8px;\">"+esc(label)+"</div>"+
+      "<div style=\"display:flex;flex-direction:column;gap:7px;\">";
+    days[key].forEach(function(ev){
+      var s=ev.start&&(ev.start.dateTime||ev.start.date);
+      var e=ev.end&&(ev.end.dateTime||ev.end.date);
+      var allDay=!!(ev.start&&ev.start.date&&!ev.start.dateTime);
+      var sd=s?new Date(s):null, ed=e?new Date(e):null;
+      var timeStr=allDay?"All day":sd?sd.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}):"";
+      if (!allDay&&ed) { var mins=Math.round((ed-sd)/60000); timeStr+=" · "+(mins<60?mins+"m":mins===60?"1h":(mins/60).toFixed(1).replace(/\.0$/,"")+"h"); }
+      var hasVideo=!!(ev.hangoutLink||ev.conferenceData||(ev.description&&(ev.description.indexOf("meet.google")>-1||ev.description.indexOf("zoom.us")>-1)));
+      var att=ev.attendees?ev.attendees.filter(function(a){return a.responseStatus!=="declined";}).length:0;
+      var meta=[];
+      if (ev.location) meta.push("📍 "+ev.location);
+      if (att>1) meta.push("👥 "+att);
+      if (hasVideo) meta.push("📹 Video");
+      html+="<div class=\"ecard\" style=\""+( isToday?"border-left:3px solid var(--blue-mid);":"")+"\">"+
+        "<div class=\"erow\" style=\"cursor:default;\">"+
+        "<div style=\"min-width:56px;flex-shrink:0;\">"+
+          (allDay?"<div style=\"font-size:11px;font-weight:700;color:var(--blue-mid);\">All day</div>":
+            sd?"<div style=\"font-size:var(--fs-sm);font-weight:700;color:"+(isToday?"var(--navy)":"var(--text-2)")+";\">"+sd.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})+"</div>"+(ed?"<div style=\"font-size:11px;color:var(--text-3);\">"+ed.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})+"</div>":""):"")+
+        "</div>"+
+        "<div style=\"width:8px;height:8px;border-radius:50%;background:"+(isToday?"var(--blue-mid)":"var(--border-md)")+";flex-shrink:0;margin-top:5px;\"></div>"+
+        "<div style=\"flex:1;min-width:0;\">"+
+          "<div style=\"font-size:var(--fs-md);font-weight:600;color:var(--text);margin-bottom:4px;\">"+esc(ev.summary||"Untitled")+"</div>"+
+          (meta.length?"<div style=\"font-size:var(--fs-xs);color:var(--text-3);\">"+esc(meta.join(" · "))+"</div>":"")+
+        "</div></div></div>";
     });
-  }
+    html+="</div></div>";
+  });
 
-  function wireTab(id, tab) {
-    wireBtn(id, function() { swTab(tab); });
-  }
+  html+="<div style=\"text-align:center;padding:1rem;\"><button id=\"cal-refresh\" class=\"btn btn-sm\">↻ Refresh</button></div>";
+  setHTML("tab-body", html);
+  addClick("cal-refresh", function(){calFetching=false;renderCalendar();});
+}
 
-  function init() {
-    var h = new Date().getHours();
-    txt('greeting-title', h < 12 ? 'Good morning \ud83d\udc4b' : h < 17 ? 'Good afternoon \ud83d\udc4b' : 'Good evening \ud83d\udc4b');
-    loadTodos();
-    var hasSaved = loadSaved();
-    if (hasSaved) { hide('setup-view'); show('main-view'); }
-    renderNav();
+// ── Chat ──────────────────────────────────────────────────────
+function toggleChat() {
+  var panel=$("chat-panel");
+  if (!panel) return;
+  panel.classList.toggle("open");
+  if (panel.classList.contains("open")) setTimeout(function(){var i=$("chat-input");if(i)i.focus();},280);
+}
 
-    // Wire static buttons — both click + touchend
-    wireBtn('btn-launch',      launch);
-    wireBtn('btn-triage',      runTriage);
-    wireBtn('chat-fab',        toggleChat);
-    wireBtn('btn-chat-send',   sendChat);
-    wireBtn('btn-chat-close',  toggleChat);
-    wireBtn('btn-chat-clear',  clearChat);
+function clearChat() {
+  chatHistory=[];
+  setHTML("chat-msgs","<div class=\"cmsg assistant\"><div class=\"cbubble\">Chat cleared. How can I help?</div></div>");
+}
 
-    // Tabs
-    wireTab('tab-flagged',  'flagged');
-    wireTab('tab-archive',  'archive');
-    wireTab('tab-all',      'all');
-    wireTab('tab-todos',    'todos');
-    wireTab('tab-calendar', 'calendar');
+function upChatCtx() {
+  setTxt("chat-ctx", allEmails.length
+    ? allEmails.length+" emails — "+flagged.length+" flagged, "+archiveCandidates.length+" to archive"
+    : "No inbox loaded");
+}
 
-    // Chat textarea
-    var cta = el('cta');
-    if (cta) {
-      cta.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
-      });
-      cta.addEventListener('input', function() {
-        cta.style.height = 'auto';
-        cta.style.height = Math.min(cta.scrollHeight, 120) + 'px';
-      });
-    }
-  }
+function sendChat() {
+  if (chatBusy) return;
+  var inp=$("chat-input"); if (!inp) return;
+  var text=inp.value.trim(); if (!text) return;
+  if (!cfg.akey){appendChat("assistant","No API key — go to Settings.");return;}
+  inp.value=""; inp.style.height="auto";
+  appendChat("user",text);
+  chatHistory.push({role:"user",content:text});
+  chatBusy=true;
+  var btn=$("btn-chat-send"); if(btn) btn.disabled=true;
+  appendChat("assistant","Thinking…",true);
 
-  // loadSaved() already handles migration from all old keys — no separate step needed
+  var ctx="Inbox: "+allEmails.length+" emails. "+
+    "Flagged ("+flagged.length+"): "+flagged.slice(0,5).map(function(e){return e.from+" | "+e.subject;}).join("; ")+
+    (archiveCandidates.length ? " Archive candidates: "+archiveCandidates.length : "");
 
-  // Run on DOM ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+  claude(chatHistory,"You are Claude inside Inbox Zero, a Gmail triage tool. Be concise.\n\n"+ctx, 1000)
+    .then(function(data){
+      if (data.error) throw new Error(data.error.message||"API error");
+      var reply=claudeText(data)||"No response.";
+      chatHistory.push({role:"assistant",content:reply});
+      updateLastChat(reply);
+    })
+    .catch(function(e){updateLastChat("Error: "+e.message);chatHistory.pop();})
+    .then(function(){chatBusy=false;if(btn)btn.disabled=false;});
+}
+
+function appendChat(role,text,thinking) {
+  var msgs=$("chat-msgs"); if(!msgs) return;
+  var d=document.createElement("div"); d.className="cmsg "+role;
+  d.innerHTML="<div class=\"cbubble"+(thinking?" thinking":"")+"\">"+esc(text)+"</div>";
+  msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
+}
+
+function updateLastChat(text) {
+  var msgs=$("chat-msgs"); if(!msgs) return;
+  var last=msgs.querySelector(".cmsg.assistant:last-child .cbubble");
+  if(last){last.classList.remove("thinking");last.textContent=text;}
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+// ── Utilities ─────────────────────────────────────────────────
+function sndrName(from) {
+  var m=from.match(/^"?([^"<]+)"?\s*</);
+  return m?m[1].trim():from.replace(/<.*>/,"").trim()||from;
+}
+function extractEmail(from){var m=from.match(/<([^>]+)>/);return m?m[1]:from;}
+function avatarIni(from){
+  var n=sndrName(from); var p=n.split(" ").filter(Boolean);
+  return p.length>=2?(p[0][0]+p[1][0]).toUpperCase():n.slice(0,2).toUpperCase();
+}
+function fmtDate(s){
+  if(!s) return "";
+  try{var d=new Date(s),now=new Date(),diff=now-d;
+    if(diff<86400000)return d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+    if(diff<604800000)return d.toLocaleDateString([],{weekday:"short"});
+    return d.toLocaleDateString([],{month:"short",day:"numeric"});}
+  catch(e){return s.slice(0,10);}
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", function() {
+  loadTodos();
+  upTodoBadge();
+
+  // Wire static buttons — these elements exist in HTML at all times
+  $("btn-launch").addEventListener("click", launch);
+  $("chat-fab").addEventListener("click", toggleChat);
+  $("btn-chat-close").addEventListener("click", toggleChat);
+  $("btn-chat-clear").addEventListener("click", clearChat);
+  $("btn-chat-send").addEventListener("click", sendChat);
+
+  // Chat textarea
+  $("chat-input").addEventListener("keydown", function(e) {
+    if (e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}
+  });
+  $("chat-input").addEventListener("input", function() {
+    this.style.height="auto";
+    this.style.height=Math.min(this.scrollHeight,120)+"px";
+  });
+
+  // Tab clicks — tabs exist in HTML at all times
+  document.querySelectorAll(".tab").forEach(function(tab) {
+    tab.addEventListener("click", function() {
+      switchTab(tab.dataset.tab);
+    });
+  });
+
+  // Load saved credentials
+  if (loadCreds()) {
+    showMain();
   } else {
-    init();
+    show("view-setup");
   }
 
-  // Expose globally so onclick fallbacks work
-  window.IZ = { launch: launch, runTriage: runTriage, toggleChat: toggleChat,
-                goSettings: goSettings, swTab: swTab, sendChat: sendChat,
-                clearChat: clearChat, archiveOne: archiveOne, archiveSelected: archiveSelected,
-                runCalendar: runCalendar };
-
-})();
+  // btn-triage is inside view-main which may be hidden — wire after showMain sets it visible
+  // We use event delegation ONLY for btn-triage since it may not exist yet
+  document.addEventListener("click", function(e) {
+    if (e.target && e.target.id === "btn-triage") runTriage();
+    if (e.target && e.target.closest && e.target.closest("#btn-triage")) runTriage();
+  });
+});
 </script>
 </body>
 </html>
